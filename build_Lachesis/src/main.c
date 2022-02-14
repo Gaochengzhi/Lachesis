@@ -12,8 +12,39 @@
 #include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 /*some definitions*/
 /*some parsers*/
+long eval_op(long x, char* op, long y)
+{
+    if (strcmp(op, "+") == 0) {
+        return x + y;
+    }
+    if (strcmp(op, "-") == 0) {
+        return x - y;
+    }
+    if (strcmp(op, "*") == 0) {
+        return x * y;
+    }
+    if (strcmp(op, "/") == 0) {
+        return x / y;
+    }
+    return 0;
+}
+
+long eval(mpc_ast_t* t)
+{
+    if (strstr(t->tag, "number")) {
+        return atoi(t->contents); // number returns itself
+    }
+    char* op = t->children[1]->contents;
+    long x = eval(t->children[2]);
+    int i = 3;
+    while (strstr(t->children[i]->tag, "expr")) {
+        x = eval_op(x, op, eval(t->children[i++]));
+    }
+    return x;
+}
 int main(int argc, char const* argv[])
 {
     /*Lists of Parsers*/
@@ -28,7 +59,8 @@ int main(int argc, char const* argv[])
         expr      : <number> | '[' <operator> <expr>+ ']' ; \
         lispy     : /^/ <operator> <expr>+ /$/ ;            \
         ",
-        Number, Operator, Expr, Lispy); // notice, can't place space after '\' !
+        Number, Operator, Expr,
+        Lispy); // notice, can't place space after '\' !
     lec_print_headline();
     while (1) {
 
@@ -40,11 +72,14 @@ int main(int argc, char const* argv[])
         if (mpc_parse("<stdin>", input, Lispy, &r)) {
             puts("Sucess to build the AST tree!");
             mpc_ast_print(r.output);
+            long result = eval(r.output);
+            printf("The result of expression is: %li\n", result);
             mpc_ast_delete(r.output);
         } else {
             mpc_err_print(r.error);
             mpc_err_delete(r.error);
         }
+        free(input);
     }
     /*before end of code*/
     mpc_cleanup(4, Number, Operator, Expr, Lispy);
