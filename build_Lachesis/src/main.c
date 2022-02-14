@@ -6,7 +6,7 @@
  * Last Modified Date: 14.02.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
-#include "../libaray/mpc/mpc.h"
+#include "../lib/mpc/mpc.h"
 #include "headline.h"
 #include <readline/history.h>
 #include <readline/readline.h>

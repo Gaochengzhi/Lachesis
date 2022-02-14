@@ -10,13 +10,13 @@ target = Lachesis
 SRCDIR := src
 TESTDIR := test
 deps = $(shell find  ./src -name "*.h")
-src = $(shell find  ./ -name "*.c*")
+src = $(shell find  ./lib -name "*.c"&& find ./src -name "*.c")
 obj = $(src:%.c=%.o)
 install:
 	$(cc) -Wall  -lreadline $(src) 
-run: $(obj)
-	$(cc) -o $(prom) $(obj)
-
+	mv a.out build/Lachesis
+run: 
+	./build/Lachesis
 clean:
 	-@rm -f Lachesis
 	-@rm -f src/*.o test/*.o
