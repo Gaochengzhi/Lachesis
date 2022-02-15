@@ -3,42 +3,111 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 11.02.2022
- * Last Modified Date: 14.02.2022
+ * Last Modified Date: 15.02.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "../lib/mpc/mpc.h"
 #include "headline.h"
+#include <errno.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/*some definitions*/
+
+/*define some errors*/
+enum { LERR_DIV_ZERO, LERR_BAD_OP, LERR_BAD_NUM };
+/*define some lach types */
+enum { LVAL_NUM, LVAL_ERR };
 /*some parsers*/
-long eval_op(long x, char* op, long y)
+
+typedef struct {
+    int type;
+    long num;
+    int err;
+} lval;
+lval lval_num(long x)
 {
-    if (strcmp(op, "+") == 0) {
-        return x + y;
-    }
-    if (strcmp(op, "-") == 0) {
-        return x - y;
-    }
-    if (strcmp(op, "*") == 0) {
-        return x * y;
-    }
-    if (strcmp(op, "/") == 0) {
-        return x / y;
-    }
-    return 0;
+    lval v;
+    v.type = LVAL_NUM;
+    v.num = x;
+    return v;
 }
 
-long eval(mpc_ast_t* t)
+lval lval_err(int x)
+{
+    lval v;
+    v.type = LVAL_ERR;
+    v.err = x;
+    return v;
+}
+
+/*print a lval*/
+
+void lval_print(lval v)
+{
+    switch (v.type) {
+    case LVAL_NUM:
+        printf("%li", v.num);
+        break;
+    case LVAL_ERR:
+        if (v.err == LERR_DIV_ZERO) {
+            printf("Error: Divided by zero!");
+        }
+        if (v.err == LERR_BAD_OP) {
+            printf("Error: Invalid operator!");
+        }
+
+        if (v.err == LERR_BAD_NUM) {
+            printf("Error: Invalid number!");
+        }
+        break;
+    }
+}
+void lval_print_line(lval v)
+{
+    lval_print(v);
+    putchar('\n');
+}
+lval eval_op(lval x, char* op, lval y)
+{
+
+    if (y.type == LVAL_ERR) {
+        return y;
+    }
+    if (x.type == LVAL_ERR) {
+        return x;
+    }
+    if (strcmp(op, "+") == 0) {
+
+        return lval_num(x.num + y.num);
+    }
+    if (strcmp(op, "-") == 0) {
+        return lval_num(x.num - y.num);
+    }
+    if (strcmp(op, "*") == 0) {
+        return lval_num(x.num * y.num);
+    }
+    if (strcmp(op, "/") == 0) {
+
+        return y.num == 0 ? lval_err(LERR_DIV_ZERO) : lval_num(x.num / y.num);
+    }
+    return lval_err(LERR_BAD_OP);
+}
+
+lval eval(mpc_ast_t* t)
 {
     if (strstr(t->tag, "number")) {
-        return atoi(t->contents); // number returns itself
+        errno = 0;
+        long x = strtol(t->contents, NULL, 10);
+
+        /*long int strtol (const char* str, char** endptr, int base);*/
+        return errno != ERANGE // #define ERANGE 34 <Result too large>
+            ? lval_num(x)      // number returns itself
+            : lval_err(LERR_BAD_NUM);
     }
     char* op = t->children[1]->contents;
-    long x = eval(t->children[2]);
+    lval x = eval(t->children[2]);
     int i = 3;
     while (strstr(t->children[i]->tag, "expr")) {
         x = eval_op(x, op, eval(t->children[i++]));
@@ -69,11 +138,10 @@ int main(int argc, char const* argv[])
         add_history(input);
 
         mpc_result_t r;
+
         if (mpc_parse("<stdin>", input, Lispy, &r)) {
-            puts("Sucess to build the AST tree!");
-            mpc_ast_print(r.output);
-            long result = eval(r.output);
-            printf("The result of expression is: %li\n", result);
+            lval result = eval(r.output);
+            lval_print_line(result);
             mpc_ast_delete(r.output);
         } else {
             mpc_err_print(r.error);
