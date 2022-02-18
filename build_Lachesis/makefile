@@ -12,8 +12,14 @@ TESTDIR := test
 deps = $(shell find  ./src -name "*.h")
 src = $(shell find  ./lib -name "*.c"&& find ./src -name "*.c")
 obj = $(src:%.c=%.o)
+
+
+debug:
+	#-g means gdb
+	$(cc) -Wall -g  -lreadline  $(src) 
+	mv a.out Lachesis
 install:
-	$(cc) -Wall  -lreadline $(src) 
+	$(cc) -Wall  -lreadline  $(src) 
 	mv a.out build/Lachesis
 run: 
 	./build/Lachesis
