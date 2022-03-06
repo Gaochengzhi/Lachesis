@@ -19,10 +19,10 @@ debug:
 	$(cc) -Wall -g  -lreadline  $(src) 
 	mv a.out Lachesis
 install:
-	$(cc) -Wall  -lreadline  $(src) 
+	$(cc) -Wall -O3  -lreadline  $(src) 
 	mv a.out build/Lachesis
 run: 
-	./build/Lachesis
+	./Lachesis
 clean:
 	-@rm -f Lachesis
 	-@rm -f src/*.o test/*.o

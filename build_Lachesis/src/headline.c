@@ -3,11 +3,10 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 23.02.2022
+ * Last Modified Date: 05.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
-#include "./headline.h"
-#include "lachesis_debug.h"
+#include "headline.h"
 #include <stdio.h>
 #define _COSTOMIZE "default"
 void lec_print_headline()
@@ -22,13 +21,16 @@ void lec_print_headline()
     printf("Version: %s, ", uname_pointer.release);
     printf("Machine: %s. ", uname_pointer.machine);
     puts("\n");
-    puts("NOTE: This version is for creating debug mode and code refactory!");
-    puts("      Type -g or --g to debug");
-
-    if (_debug_mode == 1) {
-        char* types = "\nNote:\nLVAL_NUM=0,\
-            \nLVAL_ERR=1,\nLVAL_SYMBOL=2,\
-            \nLVAL_SEXPR=3\n";
-        puts(types);
-    }
+    puts("      Type -h or --h to help");
+    puts("      Type -g or --g to debug\n\n");
+}
+void print_help()
+{
+    printf("Function: \
+            \n def {x} 100 \
+            \n +x 1 \
+            \n \
+            \n def {a b} 5 6 \
+            \n + ab \
+            ");
 }

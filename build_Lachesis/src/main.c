@@ -10,8 +10,9 @@
 #include "../lib/mpc/mpc.h"
 #include "headline.h"
 #include "lachesis_debug.h"
-#include "lachesis_value.h"
-#include <errno.h>
+#include "lachesis_environment.h"
+#include "lachesis_object.h"
+#include "lachesis_type.h"
 #include <readline/history.h>
 #include <readline/readline.h>
 #include <stdio.h>
@@ -37,23 +38,29 @@ int main(int argc, char const* argv[])
     /*Lists of Parsers*/
     mpc_parser_t* Number = mpc_new("number");
     mpc_parser_t* Symbol = mpc_new("symbol");
-    mpc_parser_t* Expr = mpc_new("expr");
     mpc_parser_t* Sexpr = mpc_new("sexpr");
+    mpc_parser_t* Qexpr = mpc_new("qexpr");
+    mpc_parser_t* Expr = mpc_new("expr");
     mpc_parser_t* Lispy = mpc_new("lispy");
     /*Language Definition*/
     mpca_lang(MPCA_LANG_DEFAULT, "                          \
         number    : /-?[0-9]+/ ;                            \
-        symbol    : '+' | '-' | '*' | '/' ;                 \
+        symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;       \
         sexpr     : '[' <expr>* ']' ;                       \
-        expr      : <number> | <symbol> | <sexpr> ;         \
+        qexpr     : '{' <expr>* '}' ;                       \
+        expr      : <number> | <symbol> | <sexpr>| <qexpr> ;\
         lispy     : /^/ <expr>* /$/ ;                       \
         ",
-        Number, Symbol, Expr, Sexpr,
+        Number, Symbol, Sexpr, Qexpr, Expr,
         Lispy); // notice, can't place space after '\' !
 
     /*print some welcome world*/
     lec_print_headline();
 
+    /*inti the environment*/
+
+    lenv* e = lenv_new();
+    lenv_builtin_init_list(e);
     while (1) {
 
         char* input = readline("Lachesis> ");
@@ -62,14 +69,18 @@ int main(int argc, char const* argv[])
             puts("Bye!");
             exit(0);
         }
+
+        if (strcmp(input, "h") == 0) {
+            print_help();
+        }
         add_history(input);
 
         mpc_result_t r;
 
         if (mpc_parse("<stdin>", input, Lispy, &r)) {
-            lval* x = lval_eval(lval_read(r.output));
-            lval_print_line(x);
-            lval_del(x);
+            LObject* x = lobj_eval(e, lobj_read(r.output));
+            lobj_print_line(x);
+            lobj_del(x);
             mpc_ast_delete(r.output);
         } else {
             mpc_err_print(r.error);
@@ -78,7 +89,8 @@ int main(int argc, char const* argv[])
         free(input);
     }
     /*before end of code*/
-    mpc_cleanup(5, Number, Symbol, Expr, Sexpr, Lispy);
+    lenv_del(e);
+    mpc_cleanup(6, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
 
     return 0;
 }
