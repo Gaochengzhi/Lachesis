@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 04.03.2022
+ * Last Modified Date: 07.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -13,6 +13,7 @@
 #define _LACHESIS_OBJECT_H
 
 #include "../lib/mpc/mpc.h"
+#include "lachesis_builtin.h"
 #include "lachesis_debug.h"
 #include "lachesis_type.h"
 #include <stdarg.h>
@@ -39,17 +40,7 @@ LObject* lobj_pop(LObject* v, int i);
 LObject* lobj_join(LObject* x, LObject* y);
 LObject* lobj_func(lbuiltin func);
 LObject* lobj_copy(LObject* v);
-LObject* built_in(LObject* a, char* func);
-LObject* built_in_op(lenv* e, LObject* a, char* op);
+LObject* lobj_lambda(LObject* arguments, LObject* body);
+LObject* lobj_call(lenv* e, LObject* func, LObject* o);
 
-LObject* built_in_add(lenv* e, LObject* a);
-LObject* built_in_sub(lenv* e, LObject* a);
-LObject* built_in_mult(lenv* e, LObject* a);
-LObject* built_in_div(lenv* e, LObject* a);
-LObject* built_in_head(lenv* e, LObject* a);
-LObject* built_in_tail(lenv* e, LObject* a);
-LObject* built_in_list(lenv* e, LObject* a);
-LObject* built_in_eval(lenv* e, LObject* a);
-LObject* built_in_join(lenv* e, LObject* a);
-LObject* built_in_define(lenv* e, LObject* a);
 #endif

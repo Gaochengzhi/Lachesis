@@ -16,15 +16,24 @@ typedef LObject* (*lbuiltin)(lenv*, LObject*);
 struct _lobj {
     int type;
 
+    // Basic types
     long num;
     char* err;
     char* symbol;
+
+    // sub_object
     int count;      // how many pointers to a list of lobj
     LObject** cell; // pointers to a list of lobj
-    lbuiltin func;  // function pointers
+
+    // function
+    lbuiltin func;
+    lenv* env;
+    LObject* argument;
+    LObject* body;
 };
 
 struct _lenv {
+    lenv* parent;
     int count;
     char** symbol_list;
     LObject** object_list;

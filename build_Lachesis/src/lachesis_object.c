@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 05.03.2022
+ * Last Modified Date: 08.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -11,6 +11,7 @@
 #include "lachesis_debug.h"
 #include "lachesis_environment.h"
 #include "lachesis_type.h"
+#include <stdio.h>
 #include <stdlib.h>
 
 /*give lobj a number and tags it*/
@@ -91,6 +92,12 @@ void lobj_del(LObject* v)
     case LOBJ_NUM:
         break;
     case LOBJ_FUNC:
+        if (!v->func) {
+            /*self-define cases*/
+            lenv_del(v->env);
+            lobj_del(v->argument);
+            lobj_del(v->body);
+        }
         break;
         /*error or symbol will free its string data*/
     case LOBJ_ERR:
@@ -184,7 +191,15 @@ void lobj_print(LObject* v)
         break;
 
     case LOBJ_FUNC:
-        printf("<function>");
+        if (v->func) {
+            printf("<built_in_function>");
+        } else {
+            printf("(\\ ");
+            lobj_print(v->argument);
+            putchar(' ');
+            lobj_print(v->body);
+            putchar(' ');
+        }
         break;
 
     case LOBJ_SYMBOL:
@@ -268,123 +283,9 @@ LObject* lobj_eval_sexpr(lenv* e, LObject* v)
         return lobj_error("first element is not a function");
     }
 
-    LObject* result = f->func(e, v);
+    LObject* result = lobj_call(e, f, v);
     lobj_del(f);
     return result;
-}
-
-LObject* built_in_op(lenv* e, LObject* a, char* op)
-{
-    /*Make sure all arguments are numbers*/
-    for (int i = 0; i < a->count; ++i) {
-        ERROW_CHECK_TYPE(op, a, i, LOBJ_NUM);
-    }
-
-    /*Pop the first element*/
-    LObject* x = lobj_pop(a, 0);
-
-    /*No arguments and sub will perform the unary operation*/
-    /*e.g: y = -4*/
-    if ((strcmp(op, "-") == 0) && a->count == 0) {
-        x->num = -(x->num);
-    }
-
-    /*If there are still remaining numbers*/
-    while (a->count > 0) {
-
-        /*Pop the next */
-        LObject* y = lobj_pop(a, 0);
-        if (strcmp(op, "+") == 0) {
-            x->num += y->num;
-        }
-
-        if (strcmp(op, "-") == 0) {
-            x->num -= y->num;
-        }
-
-        if (strcmp(op, "*") == 0) {
-            x->num *= y->num;
-        }
-        if (strcmp(op, "/") == 0) {
-            if (y->num == 0) {
-
-                lobj_del(x);
-                lobj_del(y);
-                x = lobj_error("Division by zero!");
-                break;
-            }
-            x->num /= y->num;
-        }
-        lobj_del(y);
-    }
-    lobj_del(a);
-    return x;
-}
-
-LObject* built_in_add(lenv* e, LObject* a) { return built_in_op(e, a, "+"); }
-
-LObject* built_in_sub(lenv* e, LObject* a) { return built_in_op(e, a, "-"); }
-
-LObject* built_in_mult(lenv* e, LObject* a) { return built_in_op(e, a, "*"); }
-
-LObject* built_in_div(lenv* e, LObject* a) { return built_in_op(e, a, "/"); }
-
-LObject* built_in_head(lenv* e, LObject* a)
-{
-
-    ERROW_CHECK_NUM("head", a, 1);
-    ERROW_CHECK_TYPE("head", a, 0, LOBJ_QEXPR);
-    ERROW_CHECK_NOT_EMPTY("head", a, 0);
-
-    LObject* v = lobj_take_out(a, 0);
-    while (v->count > 1) {
-        lobj_del(lobj_pop(v, 1));
-    }
-    return v;
-}
-
-LObject* built_in_tail(lenv* e, LObject* a)
-{
-    ERROW_CHECK_NUM("tail", a, 1);
-    ERROW_CHECK_TYPE("tail", a, 0, LOBJ_QEXPR);
-    ERROW_CHECK_NOT_EMPTY("tail", a, 0);
-
-    LObject* v = lobj_take_out(a, 0);
-    lobj_del(lobj_pop(v, 0));
-    return v;
-}
-
-/*convert a s-expression to a q-expression*/
-LObject* built_in_list(lenv* e, LObject* a)
-{
-    a->type = LOBJ_QEXPR;
-    return a;
-}
-
-/*convert a q-expression to a q-expression*/
-LObject* built_in_eval(lenv* e, LObject* a)
-{
-
-    ERROW_CHECK_NUM("eval", a, 1);
-    ERROW_CHECK_TYPE("eval", a, 0, LOBJ_QEXPR);
-
-    LObject* x = lobj_take_out(a, 0);
-    x->type = LOBJ_SEXPR;
-    return lobj_eval(e, x);
-}
-
-LObject* built_in_join(lenv* e, LObject* a)
-{
-    for (int i = 0; i < a->count; ++i) {
-        ERROW_CHECK_TYPE("join", a, i, LOBJ_QEXPR);
-    }
-
-    LObject* x = lobj_pop(a, 0);
-    while (a->count) {
-        x = lobj_join(x, lobj_pop(a, 0));
-    }
-    lobj_del(a);
-    return x;
 }
 
 LObject* lobj_join(LObject* x, LObject* y)
@@ -396,7 +297,6 @@ LObject* lobj_join(LObject* x, LObject* y)
     free(y);
     return x;
 }
-
 /*Pop up the i-th item inside the cell, return the poped one*/
 LObject* lobj_pop(LObject* v, int i)
 {
@@ -439,7 +339,16 @@ LObject* lobj_copy(LObject* v)
 
     switch (v->type) {
     case LOBJ_FUNC:
-        x->func = v->func;
+        if (v->func) {
+            /*built in function cases*/
+            x->func = v->func;
+        } else {
+            /*self define cases*/
+            x->func = NULL;
+            x->env = lenv_copy(v->env);
+            x->body = lobj_copy(v->body);
+            x->argument = lobj_copy(v->argument);
+        }
         break;
     case LOBJ_NUM:
         x->num = v->num;
@@ -466,31 +375,54 @@ LObject* lobj_copy(LObject* v)
     return x;
 }
 
-LObject* built_in_define(lenv* e, LObject* a)
+LObject* lobj_lambda(LObject* arguments, LObject* body)
 {
-    ERROW_CHECK_TYPE("def", a, 0, LOBJ_QEXPR);
+    LObject* v = malloc(sizeof(LObject));
+    v->type = LOBJ_FUNC;
 
-    /*catch the symbol_list in the first of the list*/
-    LObject* symbol_list = a->cell[0];
+    v->func = NULL;
+    v->env = lenv_new();
+    v->argument = arguments;
+    v->body = body;
+    return v;
+}
 
-    /*make sure all elements of list are symbols*/
-    for (int i = 0; i < symbol_list->count; ++i) {
-        ERROW_CHECK(a, (symbol_list)->cell[i]->type == LOBJ_SYMBOL,
-            "Function 'def' cannot define non-symbol.\n Got %s, Expected %s.",
-            lobj_type_name(symbol_list->cell[i]->type),
-            lobj_type_name(LOBJ_SYMBOL));
+LObject* lobj_call(lenv* e, LObject* func, LObject* o)
+{
+    /*built in function will be called directly*/
+    if (func->func) {
+        return func->func(e, o);
     }
 
-    /*check symbol and object values*/
-    ERROW_CHECK(a, symbol_list->count == a->count - 1,
-        "Function def cannot define incorrect number of objects.\n Got %i, "
-        "Expected %i.",
-        symbol_list->count, a->count - 1);
+    /*split arguments into two*/
+    int given = o->count;
+    int total = func->argument->count;
 
-    for (int i = 0; i < symbol_list->count; ++i) {
-        lenv_put(e, symbol_list->cell[i], a->cell[i + 1]);
+    while (o->count) {
+        if (func->argument->count == 0) {
+            lobj_del(o);
+            return lobj_error(
+                "Function passed too many arguments.\n Got %d, Expected %d",
+                given, total);
+        }
+
+        /*Pop the first symbol from the argument;*/
+        LObject* symbol = lobj_pop(func->argument, 0);
+        /*Pop the next argument from the list*/
+        LObject* value = lobj_pop(o, 0);
+
+        lenv_put(func->env, symbol, value);
+        lobj_del(symbol);
+        lobj_del(value);
     }
 
-    lobj_del(a);
-    return lobj_sexpr();
+    lobj_del(o);
+
+    if (func->argument->count == 0) {
+        func->env->parent = e;
+        return built_in_eval(
+            func->env, lobj_add(lobj_sexpr(), lobj_copy(func->body)));
+    } else {
+        return lobj_copy(func);
+    }
 }
