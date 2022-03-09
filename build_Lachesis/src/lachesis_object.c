@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 08.03.2022
+ * Last Modified Date: 09.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -425,4 +425,39 @@ LObject* lobj_call(lenv* e, LObject* func, LObject* o)
     } else {
         return lobj_copy(func);
     }
+}
+
+int lobj_equal(LObject* x, LObject* y)
+{
+    if (x->type != y->type) {
+        return 0;
+    }
+    switch (x->type) {
+    case LOBJ_NUM:
+        return x->num == y->num;
+    case LOBJ_ERR:
+        return (strcmp(x->err, y->err) == 0);
+    case LOBJ_SYMBOL:
+        return (strcmp(x->symbol, y->symbol) == 0);
+    case LOBJ_FUNC:
+        if (x->func || y->func) {
+            return x->func == y->func;
+        } else {
+            return lobj_equal(x->argument, y->argument)
+                && lobj_equal(x->body, y->body);
+        }
+    case LOBJ_QEXPR:
+    case LOBJ_SEXPR:
+        if (x->count != y->count) {
+            return 0;
+        }
+        for (int i = 0; i < x->count; ++i) {
+            if (!lobj_equal(x->cell[i], y->cell[i])) {
+                return 0;
+            }
+        }
+        return 1;
+        break;
+    }
+    return 0;
 }

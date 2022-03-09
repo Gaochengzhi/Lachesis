@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 07.03.2022
+ * Last Modified Date: 09.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -42,5 +42,6 @@ LObject* lobj_func(lbuiltin func);
 LObject* lobj_copy(LObject* v);
 LObject* lobj_lambda(LObject* arguments, LObject* body);
 LObject* lobj_call(lenv* e, LObject* func, LObject* o);
+int lobj_equal(LObject* x, LObject* y);
 
 #endif

@@ -3,36 +3,38 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 07.03.2022
- * Last Modified Date: 07.03.2022
+ * Last Modified Date: 09.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "lachesis_builtin.h"
+#include "lachesis_debug.h"
 #include "lachesis_environment.h"
+#include "lachesis_object.h"
 #include "lachesis_type.h"
 #include <math.h>
 #include <string.h>
 
-LObject* built_in_op(lenv* e, LObject* a, char* op)
+LObject* built_in_op(lenv* e, LObject* o, char* op)
 {
     /*Make sure all arguments are numbers*/
-    for (int i = 0; i < a->count; ++i) {
-        ERROW_CHECK_TYPE(op, a, i, LOBJ_NUM);
+    for (int i = 0; i < o->count; ++i) {
+        ERROW_CHECK_TYPE(op, o, i, LOBJ_NUM);
     }
 
     /*Pop the first element*/
-    LObject* x = lobj_pop(a, 0);
+    LObject* x = lobj_pop(o, 0);
 
     /*No arguments and sub will perform the unary operation*/
     /*e.g: y = -4*/
-    if ((strcmp(op, "-") == 0) && a->count == 0) {
+    if ((strcmp(op, "-") == 0) && o->count == 0) {
         x->num = -(x->num);
     }
 
     /*If there are still remaining numbers*/
-    while (a->count > 0) {
+    while (o->count > 0) {
 
         /*Pop the next */
-        LObject* y = lobj_pop(a, 0);
+        LObject* y = lobj_pop(o, 0);
         if (strcmp(op, "+") == 0) {
             x->num += y->num;
         }
@@ -56,73 +58,140 @@ LObject* built_in_op(lenv* e, LObject* a, char* op)
         }
         lobj_del(y);
     }
-    lobj_del(a);
+    lobj_del(o);
     return x;
 }
 
-LObject* built_in_add(lenv* e, LObject* a) { return built_in_op(e, a, "+"); }
+LObject* built_in_add(lenv* e, LObject* o) { return built_in_op(e, o, "+"); }
 
-LObject* built_in_sub(lenv* e, LObject* a) { return built_in_op(e, a, "-"); }
+LObject* built_in_sub(lenv* e, LObject* o) { return built_in_op(e, o, "-"); }
 
-LObject* built_in_mult(lenv* e, LObject* a) { return built_in_op(e, a, "*"); }
+LObject* built_in_mult(lenv* e, LObject* o) { return built_in_op(e, o, "*"); }
 
-LObject* built_in_div(lenv* e, LObject* a) { return built_in_op(e, a, "/"); }
+LObject* built_in_div(lenv* e, LObject* o) { return built_in_op(e, o, "/"); }
 
-LObject* built_in_head(lenv* e, LObject* a)
+LObject* built_in_great_than(lenv* e, LObject* o)
+{
+    return built_in_ord(e, o, ">");
+}
+
+LObject* built_in_great_and_equal(lenv* e, LObject* o)
+{
+    return built_in_ord(e, o, ">=");
+}
+
+LObject* built_in_less_than(lenv* e, LObject* o)
+{
+    return built_in_ord(e, o, "<");
+}
+
+LObject* built_in_less_and_equal(lenv* e, LObject* o)
+{
+    return built_in_ord(e, o, "<=");
+}
+
+LObject* built_in_ord(lenv* e, LObject* o, char* op)
+{
+    ERROW_CHECK_NUM(op, o, 2);
+    ERROW_CHECK_TYPE(op, o, 0, LOBJ_NUM);
+    ERROW_CHECK_TYPE(op, o, 1, LOBJ_NUM);
+
+    int result;
+
+    if (strcmp(op, ">") == 0) {
+        result = (o->cell[0]->num > o->cell[1]->num);
+    }
+
+    if (strcmp(op, "<") == 0) {
+        result = (o->cell[0]->num < o->cell[1]->num);
+    }
+
+    if (strcmp(op, ">=") == 0) {
+        result = (o->cell[0]->num >= o->cell[1]->num);
+    }
+
+    if (strcmp(op, "<=") == 0) {
+        result = (o->cell[0]->num <= o->cell[1]->num);
+    }
+    lobj_del(o);
+    return lobj_number(result);
+};
+
+LObject* built_in_cmp(lenv* e, LObject* o, char* op)
+{
+    ERROW_CHECK_NUM(op, o, 2);
+    int result;
+    if (strcmp(op, "==") == 0) {
+        result = lobj_equal(o->cell[0], o->cell[1]);
+    }
+    if (strcmp(op, "!=") == 0) {
+        result = !lobj_equal(o->cell[0], o->cell[1]);
+    }
+
+    lobj_del(o);
+    return lobj_number(result);
+}
+
+LObject* built_in_euql(lenv* e, LObject* o) { return built_in_cmp(e, o, "=="); }
+LObject* built_in_not_euql(lenv* e, LObject* o)
+{
+    return built_in_cmp(e, o, "!=");
+}
+LObject* built_in_head(lenv* e, LObject* o)
 {
 
-    ERROW_CHECK_NUM("head", a, 1);
-    ERROW_CHECK_TYPE("head", a, 0, LOBJ_QEXPR);
-    ERROW_CHECK_NOT_EMPTY("head", a, 0);
+    ERROW_CHECK_NUM("head", o, 1);
+    ERROW_CHECK_TYPE("head", o, 0, LOBJ_QEXPR);
+    ERROW_CHECK_NOT_EMPTY("head", o, 0);
 
-    LObject* v = lobj_take_out(a, 0);
+    LObject* v = lobj_take_out(o, 0);
     while (v->count > 1) {
         lobj_del(lobj_pop(v, 1));
     }
     return v;
 }
 
-LObject* built_in_tail(lenv* e, LObject* a)
+LObject* built_in_tail(lenv* e, LObject* o)
 {
-    ERROW_CHECK_NUM("tail", a, 1);
-    ERROW_CHECK_TYPE("tail", a, 0, LOBJ_QEXPR);
-    ERROW_CHECK_NOT_EMPTY("tail", a, 0);
+    ERROW_CHECK_NUM("tail", o, 1);
+    ERROW_CHECK_TYPE("tail", o, 0, LOBJ_QEXPR);
+    ERROW_CHECK_NOT_EMPTY("tail", o, 0);
 
-    LObject* v = lobj_take_out(a, 0);
+    LObject* v = lobj_take_out(o, 0);
     lobj_del(lobj_pop(v, 0));
     return v;
 }
 
 /*convert a s-expression to a q-expression*/
-LObject* built_in_list(lenv* e, LObject* a)
+LObject* built_in_list(lenv* e, LObject* o)
 {
-    a->type = LOBJ_QEXPR;
-    return a;
+    o->type = LOBJ_QEXPR;
+    return o;
 }
 
 /*convert a q-expression to a q-expression*/
-LObject* built_in_eval(lenv* e, LObject* a)
+LObject* built_in_eval(lenv* e, LObject* o)
 {
 
-    ERROW_CHECK_NUM("eval", a, 1);
-    ERROW_CHECK_TYPE("eval", a, 0, LOBJ_QEXPR);
+    ERROW_CHECK_NUM("eval", o, 1);
+    ERROW_CHECK_TYPE("eval", o, 0, LOBJ_QEXPR);
 
-    LObject* x = lobj_take_out(a, 0);
+    LObject* x = lobj_take_out(o, 0);
     x->type = LOBJ_SEXPR;
     return lobj_eval(e, x);
 }
 
-LObject* built_in_join(lenv* e, LObject* a)
+LObject* built_in_join(lenv* e, LObject* o)
 {
-    for (int i = 0; i < a->count; ++i) {
-        ERROW_CHECK_TYPE("join", a, i, LOBJ_QEXPR);
+    for (int i = 0; i < o->count; ++i) {
+        ERROW_CHECK_TYPE("join", o, i, LOBJ_QEXPR);
     }
 
-    LObject* x = lobj_pop(a, 0);
-    while (a->count) {
-        x = lobj_join(x, lobj_pop(a, 0));
+    LObject* x = lobj_pop(o, 0);
+    while (o->count) {
+        x = lobj_join(x, lobj_pop(o, 0));
     }
-    lobj_del(a);
+    lobj_del(o);
     return x;
 }
 
@@ -166,24 +235,46 @@ LObject* built_in_define(lenv* e, LObject* o)
 {
     return built_in_var(e, o, "def");
 }
-LObject* built_in_lambda(lenv* e, LObject* a)
+
+LObject* built_in_if(lenv* e, LObject* o)
 {
-    ERROW_CHECK_NUM("\\", a, 2);
-    ERROW_CHECK_TYPE("\\", a, 0, LOBJ_QEXPR);
-    ERROW_CHECK_TYPE("\\", a, 1, LOBJ_QEXPR);
+    ERROW_CHECK_NUM("if", o, 3);
+    ERROW_CHECK_TYPE("if", o, 0, LOBJ_NUM);
+    ERROW_CHECK_TYPE("if", o, 1, LOBJ_QEXPR);
+    ERROW_CHECK_TYPE("if", o, 2, LOBJ_QEXPR);
+
+    /*Turn them into an evaluable object*/
+    LObject* x;
+    o->cell[1]->type = LOBJ_SEXPR;
+    o->cell[2]->type = LOBJ_SEXPR;
+
+    if (o->cell[0]->num == TRUE) {
+        /*the first argument will determine the run branch*/
+        x = lobj_eval(e, lobj_pop(o, 1));
+    } else {
+        x = lobj_eval(e, lobj_pop(o, 2));
+    }
+    lobj_del(o);
+    return x;
+}
+LObject* built_in_lambda(lenv* e, LObject* o)
+{
+    ERROW_CHECK_NUM("\\", o, 2);
+    ERROW_CHECK_TYPE("\\", o, 0, LOBJ_QEXPR);
+    ERROW_CHECK_TYPE("\\", o, 1, LOBJ_QEXPR);
 
     /*first Q-expression should only contains symbol*/
-    for (int i = 0; i < a->cell[0]->count; ++i) {
-        ERROW_CHECK(a, (a->cell[0]->cell[i]->type == LOBJ_SYMBOL),
+    for (int i = 0; i < o->cell[0]->count; ++i) {
+        ERROW_CHECK(o, (o->cell[0]->cell[i]->type == LOBJ_SYMBOL),
             "Cannot define non-symbol. Got %s, Expected %s.",
-            lobj_type_name(a->cell[0]->cell[i]->type),
+            lobj_type_name(o->cell[0]->cell[i]->type),
             lobj_type_name(LOBJ_SYMBOL));
     }
 
     /*Pop first two arguments and pass them to lobj_lambda*/
-    LObject* argument = lobj_pop(a, 0);
-    LObject* body = lobj_pop(a, 0);
-    lobj_del(a);
+    LObject* argument = lobj_pop(o, 0);
+    LObject* body = lobj_pop(o, 0);
+    lobj_del(o);
 
     return lobj_lambda(argument, body);
 }
