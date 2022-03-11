@@ -38,26 +38,30 @@ int main(int argc, char const* argv[])
     /*Lists of Parsers*/
     mpc_parser_t* Number = mpc_new("number");
     mpc_parser_t* Symbol = mpc_new("symbol");
+    mpc_parser_t* String = mpc_new("string");
+    mpc_parser_t* Comment = mpc_new("lispy");
     mpc_parser_t* Sexpr = mpc_new("sexpr");
     mpc_parser_t* Qexpr = mpc_new("qexpr");
     mpc_parser_t* Expr = mpc_new("expr");
     mpc_parser_t* Lispy = mpc_new("lispy");
     /*Language Definition*/
-    mpca_lang(MPCA_LANG_DEFAULT, "                          \
-        number    : /-?[0-9]+/ ;                            \
-        symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;       \
-        sexpr     : '[' <expr>* ']' ;                       \
-        qexpr     : '{' <expr>* '}' ;                       \
-        expr      : <number> | <symbol> | <sexpr>| <qexpr> ;\
-        lispy     : /^/ <expr>* /$/ ;                       \
+    mpca_lang(MPCA_LANG_DEFAULT, "                                      \
+        number    : /-?[0-9]+/ ;                                        \
+        symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;                   \
+        string    : /\"(\\\\.|[^\"])*\"/;                               \
+        comment   : /;[^\\r\\n]*/;                                      \
+        sexpr     : '[' <expr>* ']' ;                                   \
+        qexpr     : '{' <expr>* '}' ;                                   \
+        expr      : <number> | <symbol> | <string> | <sexpr>| <qexpr> ; \
+        lispy     : /^/ <expr>* /$/ ;                                   \
         ",
-        Number, Symbol, Sexpr, Qexpr, Expr,
+        Number, Symbol, String, Sexpr, Qexpr, Expr,
         Lispy); // notice, can't place space after '\' !
 
-    /*print some welcome world*/
+    /*print some welcome words*/
     lec_print_headline();
 
-    /*inti the environment*/
+    /*init the environment*/
 
     lenv* e = lenv_new();
     lenv_builtin_init_list(e);
@@ -90,7 +94,7 @@ int main(int argc, char const* argv[])
     }
     /*before end of code*/
     lenv_del(e);
-    mpc_cleanup(6, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+    mpc_cleanup(7, Number, Symbol, String, Sexpr, Qexpr, Expr, Lispy);
 
     return 0;
 }

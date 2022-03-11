@@ -6,15 +6,17 @@ char* lobj_type_name(int t)
     case LOBJ_NUM:
         return "Number";
     case LOBJ_ERR:
-        return "error";
+        return "Error";
+    case LOBJ_STR:
+        return "String";
     case LOBJ_SYMBOL:
-        return "symbol";
+        return "Symbol";
     case LOBJ_SEXPR:
-        return "s-expression";
+        return "S-expression";
     case LOBJ_QEXPR:
-        return "q-expression";
+        return "Q-expression";
     case LOBJ_FUNC:
-        return "function";
+        return "Function";
     default:
         return "Unknown type";
     }

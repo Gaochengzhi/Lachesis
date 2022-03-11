@@ -18,6 +18,7 @@ struct _lobj {
     long num;
     char* err;
     char* symbol;
+    char* string;
 
     // sub_object
     int count;      // how many pointers to a list of lobj
@@ -36,7 +37,15 @@ struct _lenv {
     char** symbol_list;
     LObject** object_list;
 };
-enum { LOBJ_NUM, LOBJ_ERR, LOBJ_SYMBOL, LOBJ_SEXPR, LOBJ_QEXPR, LOBJ_FUNC };
+enum {
+    LOBJ_NUM,
+    LOBJ_ERR,
+    LOBJ_SYMBOL,
+    LOBJ_SEXPR,
+    LOBJ_QEXPR,
+    LOBJ_FUNC,
+    LOBJ_STR
+};
 
 // function interfaces
 

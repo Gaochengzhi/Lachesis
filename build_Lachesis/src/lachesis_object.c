@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 09.03.2022
+ * Last Modified Date: 11.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -13,6 +13,7 @@
 #include "lachesis_type.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /*give lobj a number and tags it*/
 LObject* lobj_number(long x)
@@ -52,6 +53,15 @@ LObject* lobj_symbol(char* s)
     return v;
 }
 
+LObject* lobj_string(char* s)
+{
+    LObject* v = malloc(sizeof(LObject));
+    lbug_print_sssl("assign string", s, "on pointer", (long)v); // debug line
+    v->type = LOBJ_STR;
+    v->string = malloc(sizeof(s) + 1);
+    strcpy(v->string, s);
+    return v;
+}
 /*Initialize a pointer to a new empty LObject*/
 LObject* lobj_sexpr(void)
 {
@@ -100,6 +110,9 @@ void lobj_del(LObject* v)
         }
         break;
         /*error or symbol will free its string data*/
+    case LOBJ_STR:
+        free(v->string);
+        break;
     case LOBJ_ERR:
         free(v->err);
         break;
@@ -130,6 +143,17 @@ LObject* lobj_read_num(mpc_ast_t* t)
                            : lobj_error("Too long or invalid number!");
 }
 
+LObject* lobj_read_str(mpc_ast_t* t)
+{
+    /*drop the last \0*/
+    t->contents[strlen(t->contents) - 1] = '\0';
+    char* unescaped = malloc(strlen(t->contents + 1) + 1);
+    strcpy(unescaped, t->contents + 1);
+    unescaped = mpcf_unescape(unescaped);
+    LObject* string = lobj_string(unescaped);
+    free(unescaped);
+    return string;
+}
 /*read the parser input and return the conversion of that type*/
 LObject* lobj_read(mpc_ast_t* t)
 {
@@ -141,6 +165,9 @@ LObject* lobj_read(mpc_ast_t* t)
         return lobj_symbol(t->contents);
     }
 
+    if (strstr(t->tag, "string")) {
+        return lobj_read_str(t);
+    }
     /*root means '>'! s-expression and root will 1.create an empty list*/
     LObject* x = NULL;
     if (strcmp(t->tag, ">") == 0) {
@@ -190,6 +217,9 @@ void lobj_print(LObject* v)
         printf("Error: %s", v->err);
         break;
 
+    case LOBJ_STR:
+        lobj_print_string(v);
+        break;
     case LOBJ_FUNC:
         if (v->func) {
             printf("<built_in_function>");
@@ -216,6 +246,14 @@ void lobj_print(LObject* v)
     }
 }
 
+void lobj_print_string(LObject* v)
+{
+    char* escape_str = malloc(sizeof(v->string) + 1);
+    strcpy(escape_str, v->string);
+    escape_str = mpcf_escape(escape_str);
+    printf("\"%s\"", escape_str);
+    free(escape_str);
+}
 void lobj_print_expr(LObject* v, char begin_symbol, char end_symbol)
 {
     putchar(begin_symbol);
@@ -358,6 +396,10 @@ LObject* lobj_copy(LObject* v)
         x->err = malloc(strlen(v->err) + 1);
         strcpy(x->err, v->err);
         break;
+    case LOBJ_STR:
+        x->string = malloc(strlen(v->string) + 1);
+        strcpy(x->string, v->string);
+        break;
     case LOBJ_SYMBOL:
         x->symbol = malloc(strlen(v->symbol) + 1);
         strcpy(x->symbol, v->symbol);
@@ -437,6 +479,8 @@ int lobj_equal(LObject* x, LObject* y)
         return x->num == y->num;
     case LOBJ_ERR:
         return (strcmp(x->err, y->err) == 0);
+    case LOBJ_STR:
+        return (strcmp(x->string, y->string) == 0);
     case LOBJ_SYMBOL:
         return (strcmp(x->symbol, y->symbol) == 0);
     case LOBJ_FUNC:
