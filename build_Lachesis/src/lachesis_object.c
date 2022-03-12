@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 11.03.2022
+ * Last Modified Date: 12.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -157,6 +157,7 @@ LObject* lobj_read_str(mpc_ast_t* t)
 /*read the parser input and return the conversion of that type*/
 LObject* lobj_read(mpc_ast_t* t)
 {
+
     if (strstr(t->tag, "number")) {
         return lobj_read_num(t);
     }

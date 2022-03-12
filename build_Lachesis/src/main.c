@@ -52,10 +52,11 @@ int main(int argc, char const* argv[])
         comment   : /;[^\\r\\n]*/;                                      \
         sexpr     : '[' <expr>* ']' ;                                   \
         qexpr     : '{' <expr>* '}' ;                                   \
-        expr      : <number> | <symbol> | <string> | <sexpr>| <qexpr> ; \
+        expr      : <number> | <symbol> | <string>|                     \
+                    <comment>| <sexpr>  | <qexpr> ;                     \
         lispy     : /^/ <expr>* /$/ ;                                   \
         ",
-        Number, Symbol, String, Sexpr, Qexpr, Expr,
+        Number, Symbol, String, Comment, Sexpr, Qexpr, Expr,
         Lispy); // notice, can't place space after '\' !
 
     /*print some welcome words*/
@@ -94,7 +95,7 @@ int main(int argc, char const* argv[])
     }
     /*before end of code*/
     lenv_del(e);
-    mpc_cleanup(7, Number, Symbol, String, Sexpr, Qexpr, Expr, Lispy);
+    mpc_cleanup(7, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
 
     return 0;
 }

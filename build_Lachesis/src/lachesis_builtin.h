@@ -3,13 +3,15 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 07.03.2022
- * Last Modified Date: 09.03.2022
+ * Last Modified Date: 12.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
+
 #pragma once
 #if !defined(_LACHESIS_BUILTIN_H)
 #define _LACHESIS_BUILTIN_H
 
+#include "../lib/mpc/mpc.h"
 #include "lachesis_debug.h"
 #include "lachesis_environment.h"
 #include "lachesis_object.h"
@@ -41,5 +43,6 @@ LObject* built_in_define(lenv* e, LObject* o);
 LObject* built_in_if(lenv* e, LObject* o);
 LObject* built_in_put(lenv* e, LObject* o);
 LObject* built_in_lambda(lenv* e, LObject* o);
+LObject* built_in_load(lenv* e, LObject* o);
 
 #endif // _LACHESIS_BUILTIN_

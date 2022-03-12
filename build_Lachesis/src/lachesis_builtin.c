@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 07.03.2022
- * Last Modified Date: 09.03.2022
+ * Last Modified Date: 12.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "lachesis_builtin.h"
@@ -12,6 +12,7 @@
 #include "lachesis_object.h"
 #include "lachesis_type.h"
 #include <math.h>
+#include <stdlib.h>
 #include <string.h>
 
 LObject* built_in_op(lenv* e, LObject* o, char* op)
@@ -278,3 +279,34 @@ LObject* built_in_lambda(lenv* e, LObject* o)
 
     return lobj_lambda(argument, body);
 }
+
+/*LObject* built_in_load(lenv* e, LObject* o)*/
+/*{*/
+/*ERROW_CHECK_NUM("load", o, 1);*/
+/*ERROW_CHECK_TYPE("load", o, 0, LOBJ_STR);*/
+/*mpc_result_t raw;*/
+/*if (mpc_parse_contents(o->cell[0]->string, Lispy, &raw)) {*/
+/*LObject* expression = lobj_read(raw.output);*/
+/*mpc_ast_delete(raw.output);*/
+
+/*while (expression->count) {*/
+/*LObject* x = lobj_eval(e, lobj_pop(expression, 0));*/
+/*if (x->type == LOBJ_ERR) {*/
+/*lobj_print_line(x);*/
+/*}*/
+/*}*/
+
+/*lobj_del(expression);*/
+/*lobj_del(o);*/
+/*return lobj_sexpr();*/
+/*} else {*/
+/*char* error_message = mpc_err_string(raw.error);*/
+/*mpc_err_delete(raw.error);*/
+
+/*LObject* error*/
+/*= lobj_error("Could not load the library %s", error_message);*/
+/*free(error_message);*/
+/*lobj_del(o);*/
+/*return error;*/
+/*}*/
+/*}*/

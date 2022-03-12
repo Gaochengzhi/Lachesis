@@ -1,8 +1,7 @@
-
-#pragma once
+// #pragma once
 #ifndef _LACHESIS_TYPE_H
 #define _LACHESIS_TYPE_H
-
+#include "../lib/mpc/mpc.h"
 struct _lobj;
 typedef struct _lobj LObject;
 
@@ -53,5 +52,7 @@ char* lobj_type_name(int t);
 
 #define TRUE 1
 #define FALSE 0
+
+/*Lists of Parsers*/
 
 #endif
