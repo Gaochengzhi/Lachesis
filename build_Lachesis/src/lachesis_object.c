@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 12.03.2022
+ * Last Modified Date: 13.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -53,7 +53,7 @@ LObject* lobj_symbol(char* s)
     return v;
 }
 
-LObject* lobj_string(char* s)
+LObject* lobj_string(const char* s)
 {
     LObject* v = malloc(sizeof(LObject));
     lbug_print_sssl("assign string", s, "on pointer", (long)v); // debug line

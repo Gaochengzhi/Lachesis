@@ -30,7 +30,7 @@ void lobj_del(LObject* v);
 LObject* lobj_number(long x);
 LObject* lobj_error(char* fmt, ...);
 LObject* lobj_symbol(char* s);
-LObject* lobj_string(char* s);
+LObject* lobj_string(const char* s);
 LObject* lobj_sexpr(void);
 LObject* lobj_qexpr(void);
 LObject* lobj_add(LObject* v, LObject* x);

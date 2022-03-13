@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 07.03.2022
- * Last Modified Date: 12.03.2022
+ * Last Modified Date: 13.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -44,5 +44,7 @@ LObject* built_in_if(lenv* e, LObject* o);
 LObject* built_in_put(lenv* e, LObject* o);
 LObject* built_in_lambda(lenv* e, LObject* o);
 LObject* built_in_load(lenv* e, LObject* o);
+LObject* built_in_print(lenv* e, LObject* o);
+LObject* built_in_error(lenv* e, LObject* o);
 
 #endif // _LACHESIS_BUILTIN_

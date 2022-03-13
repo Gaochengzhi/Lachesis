@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 26.02.2022
- * Last Modified Date: 09.03.2022
+ * Last Modified Date: 13.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -128,4 +128,9 @@ void lenv_builtin_init_list(lenv* e)
     lenv_add_builtin_func(e, "<", built_in_less_than);
     lenv_add_builtin_func(e, ">=", built_in_great_and_equal);
     lenv_add_builtin_func(e, "<=", built_in_less_and_equal);
+
+    /*__STRING_FUNCTION__*/
+    /*lenv_add_builtin_func(e, "load", built_in_load);*/
+    lenv_add_builtin_func(e, "error", built_in_error);
+    lenv_add_builtin_func(e, "print", built_in_print);
 }

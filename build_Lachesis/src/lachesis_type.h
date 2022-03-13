@@ -1,4 +1,4 @@
-// #pragma once
+#pragma once
 #ifndef _LACHESIS_TYPE_H
 #define _LACHESIS_TYPE_H
 #include "../lib/mpc/mpc.h"
@@ -55,4 +55,5 @@ char* lobj_type_name(int t);
 
 /*Lists of Parsers*/
 
+/*Lists of Parsers*/
 #endif

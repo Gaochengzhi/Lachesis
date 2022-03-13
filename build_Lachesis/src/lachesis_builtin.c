@@ -3,15 +3,17 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 07.03.2022
- * Last Modified Date: 12.03.2022
+ * Last Modified Date: 13.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
+
 #include "lachesis_builtin.h"
 #include "lachesis_debug.h"
 #include "lachesis_environment.h"
 #include "lachesis_object.h"
 #include "lachesis_type.h"
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -310,3 +312,22 @@ LObject* built_in_lambda(lenv* e, LObject* o)
 /*return error;*/
 /*}*/
 /*}*/
+LObject* built_in_print(lenv* e, LObject* o)
+{
+    for (int i = 0; i < o->count; ++i) {
+        lobj_print_line(o->cell[i]);
+        putchar(' ');
+    }
+    putchar('\n');
+    lobj_del(o);
+    return lobj_sexpr();
+}
+LObject* built_in_error(lenv* e, LObject* o)
+{
+    ERROW_CHECK_NUM("error", o, 1);
+    ERROW_CHECK_TYPE("error", o, 1, LOBJ_STR);
+
+    LObject* error = lobj_error(o->cell[0]->string);
+    lobj_del(o);
+    return error;
+}

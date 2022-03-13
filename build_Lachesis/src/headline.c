@@ -3,13 +3,18 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 12.03.2022
+ * Last Modified Date: 13.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "headline.h"
 #include <stdio.h>
-#include <stdlib.h>
 #define _COSTOMIZE "default"
+char strlast(const char* p)
+{
+    int len = strlen(p);
+    const char* t = &p[len - 1];
+    return *t;
+}
 void lec_print_headline()
 {
     struct utsname uname_pointer;
@@ -48,4 +53,5 @@ void print_help()
             \n def {a b} 5 6 \
             \n + ab \
             ");
+    putchar('\n');
 }

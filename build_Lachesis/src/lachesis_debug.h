@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT);
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 21.02.2022
- * Last Modified Date: 12.03.2022
+ * Last Modified Date: 13.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -19,7 +19,7 @@ extern int _debug_mode;
 void lbug_print_s(char* s);
 void lbug_print_sl(char* s, long l);
 void lbug_print_slsl(char* s1, long l1, char* s2, long l2);
-void lbug_print_sssl(char* s1, char* l1, char* s2, long l2);
+void lbug_print_sssl(char* s1, const char* l1, char* s2, long l2);
 void lbug_print_sdsl(char* s1, int l1, char* s2, long l2);
 
 #define ERROW_CHECK(args, conditon, fmt, ...)                                  \
