@@ -16,13 +16,13 @@
 #include <stdio.h>
 #include <string.h>
 
-lenv* lenv_new(void);
-lenv* lenv_copy(lenv* e);
-void lenv_del(lenv* e);
-void lenv_put(lenv* e, LObject* o, LObject* func_ptr);
-void lenv_add_builtin_func(lenv* e, char* name, lbuiltin func);
-void lenv_builtin_init_list(lenv* e);
-void lenv_define(lenv* e, LObject* o, LObject* func);
-LObject* lenv_get(lenv* e, LObject* o);
+lenv *lenv_new(void);
+lenv *lenv_copy(lenv *e);
+void lenv_del(lenv *e);
+void lenv_put(lenv *e, LObject *o, LObject *func_ptr);
+void lenv_add_builtin_func(lenv *e, char *name, lbuiltin func);
+void lenv_builtin_init_list(lenv *e);
+void lenv_define(lenv *e, LObject *o, LObject *func);
+LObject *lenv_get_copy(lenv *mother_env, LObject *son_obj);
 
 #endif // LACHESIS_ENVIRONMENT_H

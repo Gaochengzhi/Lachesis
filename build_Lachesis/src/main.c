@@ -21,6 +21,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+mpc_parser_t* Number;
+mpc_parser_t* Symbol;
+mpc_parser_t* String;
+mpc_parser_t* Comment;
+mpc_parser_t* Sexpr;
+mpc_parser_t* Qexpr;
+mpc_parser_t* Expr;
+mpc_parser_t* Lispy;
+
 int main(int argc, char const* argv[])
 {
     /*debug mode switch*/
@@ -32,18 +41,10 @@ int main(int argc, char const* argv[])
         }
     }
 
-    mpc_parser_t* Number;
-    mpc_parser_t* Symbol;
-    mpc_parser_t* String;
-    mpc_parser_t* Comment;
-    mpc_parser_t* Sexpr;
-    mpc_parser_t* Qexpr;
-    mpc_parser_t* Expr;
-    mpc_parser_t* Lispy;
     Number = mpc_new("number");
     Symbol = mpc_new("symbol");
     String = mpc_new("string");
-    Comment = mpc_new("lispy");
+    Comment = mpc_new("comment");
     Sexpr = mpc_new("sexpr");
     Qexpr = mpc_new("qexpr");
     Expr = mpc_new("expr");
@@ -102,16 +103,21 @@ int main(int argc, char const* argv[])
         }
     }
     /*file support*/
-    /*if (argc >= 2) {*/
-    /*for (int i = 1; i < argc; ++i) {*/
-    /*LObject* args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));*/
-    /*LObject* x = built_in_load(e, args);*/
-    /*if (x->type == LOBJ_ERR) {*/
-    /*lobj_print_line(x);*/
-    /*}*/
-    /*lobj_del(x);*/
-    /*}*/
-    /*}*/
+    if (argc >= 2) {
+
+        for (int i = 1; i < argc; ++i) {
+
+            LObject* args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));
+
+            LObject* x = built_in_load(e, args);
+
+            if (x->type == LOBJ_ERR) {
+                lobj_print_line(x);
+            }
+
+            lobj_del(x);
+        }
+    }
     /*before end of code*/
     lenv_del(e);
     mpc_cleanup(7, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);

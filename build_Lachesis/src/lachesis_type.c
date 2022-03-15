@@ -1,9 +1,9 @@
-
 #include "lachesis_type.h"
 
-char* lobj_type_name(int t)
+char *lobj_type_name(int typename)
 {
-    switch (t) {
+    switch (typename)
+    {
     case LOBJ_NUM:
         return "Number";
     case LOBJ_ERR:
