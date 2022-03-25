@@ -30,16 +30,11 @@ mpc_parser_t* Qexpr;
 mpc_parser_t* Expr;
 mpc_parser_t* Lispy;
 
-int main(int argc, char const* argv[])
+int main(int argc, char** argv)
 {
     /*debug mode switch*/
-    for (int i = 1; i < argc; ++i) {
-        switch (strlast(argv[i])) {
-        case 'g':
-            _debug_mode = 1;
-            break;
-        }
-    }
+
+    check_commandline_argument(&argc, argv);
 
     Number = mpc_new("number");
     Symbol = mpc_new("symbol");
@@ -75,15 +70,15 @@ int main(int argc, char const* argv[])
 
         while (1) {
 
-            char* input = readline("Lachesis> ");
+            char* input = readline("Lachesis >>> ");
             /*Attention! readline needs -lreadline argument!*/
             if (strcmp(input, "q") == 0) {
                 puts("Bye!");
                 exit(0);
             }
 
-            if (strcmp(input, "h") == 0) {
-                print_help();
+            if (strncmp(input, "h ", 2) == 0) {
+                print_help(input);
                 continue;
             }
             add_history(input);

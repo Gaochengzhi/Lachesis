@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 12.03.2022
+ * Last Modified Date: 24.03.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -35,18 +35,18 @@ LObject *lobj_sexpr(void);
 LObject *lobj_qexpr(void);
 
 LObject *lobj_add(LObject *target_obj, LObject *add_obj);
-LObject *lobj_eval_sexpr(lenv *e, LObject *o);
-LObject *lobj_eval(lenv *e, LObject *o);
+LObject *lobj_eval_sexpr(lenv *e, LObject *obj);
+LObject *lobj_eval(lenv *e, LObject *obj);
 LObject *lobj_read(mpc_ast_t *t);
 LObject *lobj_read_num(mpc_ast_t *t);
 LObject *lobj_read_str(mpc_ast_t *t);
-LObject *lobj_take_out(LObject *o, int i);
-LObject *lobj_pop(LObject *o, int i);
+LObject *lobj_take_out(LObject *obj, int index);
+LObject *lobj_pop(LObject *obj, int i);
 LObject *lobj_join(LObject *x, LObject *y);
 LObject *lobj_func(lbuiltin func);
-LObject *lobj_copy(LObject *o);
+LObject *lobj_copy(LObject *obj);
 LObject *lobj_lambda(LObject *arguments, LObject *body);
-LObject *lobj_call(lenv *e, LObject *func, LObject *o);
+LObject *lobj_call(lenv *e, LObject *func, LObject *obj);
 bool lobj_equal(LObject *x, LObject *y);
 
 #endif

@@ -13,35 +13,40 @@
 
 int _debug_mode = 0;
 
-void lbug_print_s(char* s)
+void lbug_print_s(char *s)
 {
-    if (_debug_mode == 1) {
-        printf("%-35s\n", s);
+    if (_debug_mode == 1)
+    {
+        fprintf(stderr, "%-35s\n", s);
     }
 }
-void lbug_print_sl(char* s, long l)
+void lbug_print_sl(char *s, long l)
 {
-    if (_debug_mode == 1) {
-        printf("%-35s   [%-15li]\n", s, l);
+    if (_debug_mode == 1)
+    {
+        fprintf(stderr, "%-35s   [%-15li]\n", s, l);
     }
 }
-void lbug_print_slsl(char* s1, long l1, char* s2, long l2)
+void lbug_print_slsl(char *s1, long l1, char *s2, long l2)
 {
-    if (_debug_mode == 1) {
-        printf("%-35s   [%-15li]   %-12s   [%-15li]\n", s1, l1, s2, l2);
-    }
-}
-
-void lbug_print_sssl(char* s1, const char* l1, char* s2, long l2)
-{
-    if (_debug_mode == 1) {
-        printf("%-35s   [%-15s]   %-12s   [%-15li]\n", s1, l1, s2, l2);
+    if (_debug_mode == 1)
+    {
+        fprintf(stderr, "%-35s   [%-15li]   %-12s   [%-15li]\n", s1, l1, s2, l2);
     }
 }
 
-void lbug_print_sdsl(char* s1, int l1, char* s2, long l2)
+void lbug_print_sssl(char *s1, const char *l1, char *s2, long l2)
 {
-    if (_debug_mode == 1) {
-        printf("%-35s   [%-15d]   %-12s   [%-15li]\n", s1, l1, s2, l2);
+    if (_debug_mode == 1)
+    {
+        fprintf(stderr, "%-35s   [%-15s]   %-12s   [%-15li]\n", s1, l1, s2, l2);
+    }
+}
+
+void lbug_print_sdsl(char *s1, int l1, char *s2, long l2)
+{
+    if (_debug_mode == 1)
+    {
+        fprintf(stderr, "%-35s   [%-15d]   %-12s   [%-15li]\n", s1, l1, s2, l2);
     }
 }

@@ -75,13 +75,13 @@ LObject *lenv_get_copy(lenv *mother_env, LObject *son_obj)
     }
 }
 
-void lenv_put(lenv *e, LObject *o, LObject *func_ptr)
+void lenv_put(lenv *e, LObject *func_symbol_obj, LObject *func_ptr)
 {
-    /*iterate e, if o's symbol already in e, delete the old one */
+    /*iterate e, if function's symbol already in e, delete the old one */
     /*and replace with the new one;*/
     for (int i = 0; i < e->count; ++i)
     {
-        if (strcmp(e->symbol_list[i], o->symbol) == 0)
+        if (strcmp(e->symbol_list[i], func_symbol_obj->symbol) == 0)
         {
             lobj_del(e->object_list[i]);
             e->object_list[i] = lobj_copy(func_ptr);
@@ -95,16 +95,16 @@ void lenv_put(lenv *e, LObject *o, LObject *func_ptr)
     e->symbol_list = realloc(e->symbol_list, sizeof(char *) * e->count);
     /*copy func_ptr and symbol*/
     e->object_list[e->count - 1] = lobj_copy(func_ptr);
-    e->symbol_list[e->count - 1] = malloc(strlen(o->symbol) + 1);
-    strcpy(e->symbol_list[e->count - 1], o->symbol);
+    e->symbol_list[e->count - 1] = malloc(strlen(func_symbol_obj->symbol) + 1);
+    strcpy(e->symbol_list[e->count - 1], func_symbol_obj->symbol);
 }
 
-void lenv_add_builtin_func(lenv *e, char *name, lbuiltin func)
+void lenv_add_builtin_func(lenv *e, char *symbol_name, lbuiltin func)
 {
-    LObject *o = lobj_symbol(name);
+    LObject *symbol_obj = lobj_symbol(symbol_name);
     LObject *func_obj = lobj_func(func);
-    lenv_put(e, o, func_obj);
-    lobj_del(o);
+    lenv_put(e, symbol_obj, func_obj);
+    lobj_del(symbol_obj);
     lobj_del(func_obj);
 }
 

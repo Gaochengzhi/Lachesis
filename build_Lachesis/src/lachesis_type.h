@@ -2,6 +2,7 @@
 #define _LACHESIS_TYPE_H
 
 #include "../lib/mpc/mpc.h"
+#include <stdbool.h>
 
 struct _lobj;
 typedef struct _lobj LObject;
@@ -9,38 +10,37 @@ typedef struct _lobj LObject;
 struct _lenv;
 typedef struct _lenv lenv;
 
-typedef LObject *(*lbuiltin)(lenv *, LObject *);
+typedef LObject* (*lbuiltin)(lenv*, LObject*);
 
-struct _lobj
-{
+struct _lobj {
     int type;
 
     // Basic_types
     long num;
-    char *err;
-    char *symbol;
-    char *string;
+    char* err;
+    char* symbol;
+    char* string;
 
     // sub_object
     int count;         // how many pointers to a list of lobj
-    LObject **sub_obj; // pointers to a list of lobj
+    LObject** sub_obj; // pointers to a list of lobj
 
     // function
     lbuiltin builtin_func;
-    lenv *env;
-    LObject *argument;
-    LObject *body;
+
+    // environmnet
+    lenv* env;
+    LObject* argument;
+    LObject* body;
 };
 
-struct _lenv
-{
-    lenv *parent;
+struct _lenv {
+    lenv* parent;
     int count;
-    char **symbol_list;
-    LObject **object_list;
+    char** symbol_list;
+    LObject** object_list;
 };
-enum
-{
+enum {
     LOBJ_NUM,
     LOBJ_ERR,
     LOBJ_SYMBOL,
@@ -52,11 +52,7 @@ enum
 
 // function interfaces
 
-char *lobj_type_name(int typename);
-
-typedef int bool;
-#define TRUE 1
-#define FALSE 0
+char* lobj_type_name(int typename);
 
 /*Lists of Parsers*/
 #endif
