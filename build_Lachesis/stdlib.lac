@@ -1,7 +1,0 @@
-
-[def {nli} {}]
-[def {true} 1]
-[def {false} 0]
-
-[print "Hello Word!"]
-

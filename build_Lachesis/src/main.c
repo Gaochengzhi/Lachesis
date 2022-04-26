@@ -21,20 +21,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-mpc_parser_t* Number;
-mpc_parser_t* Symbol;
-mpc_parser_t* String;
-mpc_parser_t* Comment;
-mpc_parser_t* Sexpr;
-mpc_parser_t* Qexpr;
-mpc_parser_t* Expr;
-mpc_parser_t* Lispy;
+mpc_parser_t *Number;
+mpc_parser_t *Symbol;
+mpc_parser_t *String;
+mpc_parser_t *Comment;
+mpc_parser_t *Import;
+mpc_parser_t *Sexpr;
+mpc_parser_t *Qexpr;
+mpc_parser_t *Expr;
+mpc_parser_t *LExpression;
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     /*debug mode switch*/
-
-    check_commandline_argument(&argc, argv);
 
     Number = mpc_new("number");
     Symbol = mpc_new("symbol");
@@ -43,41 +42,47 @@ int main(int argc, char** argv)
     Sexpr = mpc_new("sexpr");
     Qexpr = mpc_new("qexpr");
     Expr = mpc_new("expr");
-    Lispy = mpc_new("lispy");
+    LExpression = mpc_new("lexpression");
     /*Language Definition*/
-    mpca_lang(MPCA_LANG_DEFAULT, "                                      \
-        number    : /-?[0-9]+/ ;                                        \
-        symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;                   \
-        string    : /\"(\\\\.|[^\"])*\"/;                               \
-        comment   : /;[^\\r\\n]*/;                                      \
-        sexpr     : '[' <expr>* ']' ;                                   \
-        qexpr     : '{' <expr>* '}' ;                                   \
-        expr      : <number> | <symbol> | <string> | <comment>| <sexpr> | <qexpr> ;                     \
-        lispy     : /^/ <expr>* /$/ ;                                   \
+    mpca_lang(MPCA_LANG_DEFAULT, "                               \
+        number    : /-?[0-9]+/ ;                                 \
+        symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;            \
+        string    : /\"(\\\\.|[^\"])*\"/;                        \
+        comment   : /;[^\\r\\n]*/;                               \
+        sexpr     : '[' <expr>* ']' ;                            \
+        qexpr     : '{' <expr>* '}' ;                            \
+        expr      : <number>|<symbol>|<string>|<comment>\
+                  | <sexpr> | <qexpr> ;                          \
+        lexpression     : /^/ <expr>* /$/ ;                      \
         ",
-        Number, Symbol, String, Comment, Sexpr, Qexpr, Expr,
-        Lispy); // notice, can't place space after '\' !
+              Number, Symbol, String, Comment, Sexpr, Qexpr, Expr,
+              LExpression); // notice, can't place space after '\' !
 
     /*init the environment*/
 
-    lenv* e = lenv_new();
+    lenv *e = lenv_new();
     lenv_builtin_init_list(e);
 
-    if (argc == 1) {
+    check_commandline_argument(&argc, argv, e);
+    if (argc == 1)
+    {
 
         /*print some welcome words*/
         lec_print_headline();
 
-        while (1) {
+        while (1)
+        {
 
-            char* input = readline("Lachesis >>> ");
+            char *input = readline("Lachesis > ");
             /*Attention! readline needs -lreadline argument!*/
-            if (strcmp(input, "q") == 0) {
+            if (strcmp(input, "q") == 0)
+            {
                 puts("Bye!");
                 exit(0);
             }
 
-            if (strncmp(input, "h ", 2) == 0) {
+            if (strncmp(input, "h ", 2) == 0)
+            {
                 print_help(input);
                 continue;
             }
@@ -85,12 +90,15 @@ int main(int argc, char** argv)
 
             mpc_result_t raw;
 
-            if (mpc_parse("<stdin>", input, Lispy, &raw)) {
-                LObject* x = lobj_eval(e, lobj_read(raw.output));
+            if (mpc_parse("<stdin>", input, LExpression, &raw))
+            {
+                LObject *x = lobj_eval(e, lobj_read(raw.output));
                 lobj_print_line(x);
                 lobj_del(x);
                 mpc_ast_delete(raw.output);
-            } else {
+            }
+            else
+            {
                 mpc_err_print(raw.error);
                 mpc_err_delete(raw.error);
             }
@@ -98,24 +106,23 @@ int main(int argc, char** argv)
         }
     }
     /*file support*/
-    if (argc >= 2) {
-
-        for (int i = 1; i < argc; ++i) {
-
-            LObject* args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));
-
-            LObject* x = built_in_load(e, args);
-
-            if (x->type == LOBJ_ERR) {
+    if (argc >= 2)
+    {
+        for (int i = 1; i < argc; ++i)
+        {
+            LObject *args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));
+            LObject *x = built_in_import(e, args);
+            if (x->type == LOBJ_ERR)
+            {
                 lobj_print_line(x);
             }
-
             lobj_del(x);
         }
     }
     /*before end of code*/
     lenv_del(e);
-    mpc_cleanup(7, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
+    mpc_cleanup(
+        8, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, LExpression);
 
     return 0;
 }

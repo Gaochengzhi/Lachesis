@@ -1,0 +1,63 @@
+;       _      _   _ _ _                          
+;   ___| |_ __| | | (_) |__  _ __ __ _ _ __ _   _ 
+;  / __| __/ _` | | | | '_ \| '__/ _` | '__| | | |
+;  \__ \ || (_| | | | | |_) | | | (_| | |  | |_| |
+;  |___/\__\__,_| |_|_|_.__/|_|  \__,_|_|   \__, |
+;                                           |___/ 
+
+; function suport
+[def {func} [\ {f b} {
+    def [head f] [\ [tail f] b] 
+}]]
+
+; <stdbool>
+[def {nil} {}]
+[def {true} 1]
+[def {false} 0]
+[func {not x} {- 1 x}]
+[func {or x y} {+ x y}]
+[func {and x y} {* y x}]
+
+;numeric
+[func {first lexpr} {eval [head lexpr]}]
+[func {second lexpr} {eval [head [tail lexpr]]}]
+[func {len lexpr}{
+    if [== lexpr nil]
+    {0}
+    {+ 1 [len [tail lexpr]]}
+}]
+[func {nth n list} {
+    if [==  n 0]
+    {first list}
+    {nth [- n 1] [tail list]}
+}]
+[func {last list} {nth [- [len list] 1] list}]
+
+;函数柯力化
+[func {unpack f l} {
+    eval [join [list f] l]
+}]
+
+[func {pack f & xs} {f xs}]
+
+[def {curry} unpack]
+[def {uncurry} pack]
+
+
+[func {do & lexpr} {
+      if [== lexpr nil]
+      {nil}
+      {last lexpr}
+      }]
+[func {last lexpr} {nth [- [len lexpr] 1] lexpr}]
+
+[func {let var} {
+    [[\ {  } var] []]
+}]
+
+
+
+; check if it is ok to run
+[print "Hello Word!"]
+
+

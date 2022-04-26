@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 26.02.2022
- * Last Modified Date: 14.03.2022
+ * Last Modified Date: 01.04.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -20,7 +20,7 @@ lenv *lenv_new(void)
     e->parent = NULL;
     e->count = 0;
     e->symbol_list = NULL;
-    e->object_list = NULL;
+    e->func_object_list = NULL;
     return e;
 }
 
@@ -29,11 +29,11 @@ void lenv_del(lenv *e)
     for (int i = 0; i < e->count; ++i)
     {
         free(e->symbol_list[i]);
-        lobj_del(e->object_list[i]);
+        lobj_del(e->func_object_list[i]);
     }
 
     free(e->symbol_list);
-    free(e->object_list);
+    free(e->func_object_list);
     free(e);
 }
 
@@ -43,31 +43,31 @@ lenv *lenv_copy(lenv *e)
     new->parent = e->parent;
     new->count = e->count;
     new->symbol_list = malloc(sizeof(char *) * e->count);
-    new->object_list = malloc(sizeof(LObject *) * e->count);
+    new->func_object_list = malloc(sizeof(LObject *) * e->count);
     for (int i = 0; i < new->count; ++i)
     {
         new->symbol_list[i] = malloc(strlen(e->symbol_list[i]) + 1);
         strcpy(new->symbol_list[i], e->symbol_list[i]);
-        new->object_list[i] = lobj_copy(e->object_list[i]);
+        new->func_object_list[i] = lobj_copy(e->func_object_list[i]);
     }
     return new;
 }
 
 /*get an copy of the LObject in lenv*/
-LObject *lenv_get_copy(lenv *mother_env, LObject *son_obj)
+LObject *lenv_get_copied_obj_from_env(lenv *mother_env, LObject *son_obj)
 {
 
     for (int i = 0; i < mother_env->count; ++i)
     {
         if (strcmp(mother_env->symbol_list[i], son_obj->symbol) == 0)
         {
-            return lobj_copy(mother_env->object_list[i]);
+            return lobj_copy(mother_env->func_object_list[i]);
         }
     }
 
     if (mother_env->parent)
     {
-        return lenv_get_copy(mother_env->parent, son_obj);
+        return lenv_get_copied_obj_from_env(mother_env->parent, son_obj);
     }
     else
     {
@@ -75,7 +75,7 @@ LObject *lenv_get_copy(lenv *mother_env, LObject *son_obj)
     }
 }
 
-void lenv_put(lenv *e, LObject *func_symbol_obj, LObject *func_ptr)
+void lenv_put_function(lenv *e, LObject *func_symbol_obj, LObject *func_ptr)
 {
     /*iterate e, if function's symbol already in e, delete the old one */
     /*and replace with the new one;*/
@@ -83,18 +83,18 @@ void lenv_put(lenv *e, LObject *func_symbol_obj, LObject *func_ptr)
     {
         if (strcmp(e->symbol_list[i], func_symbol_obj->symbol) == 0)
         {
-            lobj_del(e->object_list[i]);
-            e->object_list[i] = lobj_copy(func_ptr);
+            lobj_del(e->func_object_list[i]);
+            e->func_object_list[i] = lobj_copy(func_ptr);
             return;
         }
     }
 
     /*if not repeated found, allocate for new obj */
     e->count++;
-    e->object_list = realloc(e->object_list, sizeof(LObject *) * e->count);
+    e->func_object_list = realloc(e->func_object_list, sizeof(LObject *) * e->count);
     e->symbol_list = realloc(e->symbol_list, sizeof(char *) * e->count);
     /*copy func_ptr and symbol*/
-    e->object_list[e->count - 1] = lobj_copy(func_ptr);
+    e->func_object_list[e->count - 1] = lobj_copy(func_ptr);
     e->symbol_list[e->count - 1] = malloc(strlen(func_symbol_obj->symbol) + 1);
     strcpy(e->symbol_list[e->count - 1], func_symbol_obj->symbol);
 }
@@ -103,19 +103,19 @@ void lenv_add_builtin_func(lenv *e, char *symbol_name, lbuiltin func)
 {
     LObject *symbol_obj = lobj_symbol(symbol_name);
     LObject *func_obj = lobj_func(func);
-    lenv_put(e, symbol_obj, func_obj);
+    lenv_put_function(e, symbol_obj, func_obj);
     lobj_del(symbol_obj);
     lobj_del(func_obj);
 }
 
-void lenv_define(lenv *e, LObject *o, LObject *func)
+void lenv_define(lenv *e, LObject *symbol_obj, LObject *func_obj)
 {
     /*find e->parent's parent... */
     while (e->parent)
     {
         e = e->parent;
     }
-    lenv_put(e, o, func);
+    lenv_put_function(e, symbol_obj, func_obj);
 }
 void lenv_builtin_init_list(lenv *e)
 {
@@ -132,6 +132,8 @@ void lenv_builtin_init_list(lenv *e)
     lenv_add_builtin_func(e, "/", built_in_div);
 
     /*__FUNCTION__*/
+    lenv_add_builtin_func(e, "if", built_in_if);
+    lenv_add_builtin_func(e, "\\", built_in_lambda);
     lenv_add_builtin_func(e, "def", built_in_define);
     lenv_add_builtin_func(e, "=", built_in_put);
     lenv_add_builtin_func(e, "==", built_in_euql);
@@ -142,7 +144,11 @@ void lenv_builtin_init_list(lenv *e)
     lenv_add_builtin_func(e, "<=", built_in_less_and_equal);
 
     /*__STRING_FUNCTION__*/
-    lenv_add_builtin_func(e, "load", built_in_load);
+    lenv_add_builtin_func(e, "import", built_in_import);
     lenv_add_builtin_func(e, "error", built_in_error);
     lenv_add_builtin_func(e, "print", built_in_print);
+
+    /*__SYSTEM__*/
+
+    // lenv_add_builtin_func(e, "import", built_in_import);
 }
