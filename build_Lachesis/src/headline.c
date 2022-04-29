@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 27.04.2022
+ * Last Modified Date: 30.04.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "headline.h"
@@ -46,55 +46,47 @@ void save_runtime_info_to_log()
 {
 
     time_t current_time;
-    FILE *file;
+    FILE* file;
 
     current_time = time(NULL);
 
     file = fopen("output.log", "a+");
 
     fprintf(file,
-            "\n==============================================\nThis is output log "
-            "in %s\n==============================================\n",
-            ctime(&current_time));
+        "\n==============================================\nThis is output log "
+        "in %s\n==============================================\n",
+        ctime(&current_time));
     freopen("output.log", "a+", stderr);
     fclose(file);
 }
 
-int check_commandline_argument(int *argc, char **argv, lenv *e)
+int check_commandline_argument(int* argc, char** argv, lenv* e)
 {
     int len = *argc;
     int return_number = 0;
-    for (int i = 1; i < len; i++)
-    {
-        if (argv[i][0] == '-')
-        {
+    for (int i = 1; i < len; i++) {
+        if (argv[i][0] == '-') {
 
             *argc = *argc - 1;
-            if (argv[i][1] == 'g')
-            {
+            if (argv[i][1] == 'g') {
                 _debug_mode = true;
                 save_runtime_info_to_log();
                 return_number = 1;
                 goto new;
             }
-            if (strstr(argv[i], "-std"))
-            {
-                LObject *args = lobj_add(lobj_sexpr(), lobj_string("stdlib"));
-                LObject *x = built_in_import(e, args);
-                if (x->type == LOBJ_ERR)
-                {
+            if (strstr(argv[i], "-std")) {
+                LObject* args = lobj_add(lobj_sexpr(), lobj_string("stdlib"));
+                LObject* x = built_in_import(e, args);
+                if (x->type == LOBJ_ERR) {
                     lobj_print_line(x);
                 }
                 lobj_delete(x);
                 goto new;
             }
-            if (strstr(argv[i], "-h"))
-            {
+            if (strstr(argv[i], "-h")) {
                 print_help();
                 exit(0);
-            }
-            else
-            {
+            } else {
                 printf("Lachesis: Invalid argument %s\n", argv[i]);
                 puts(
                     "usage: lac [-gstdhelp] [-h -help] [-g] [-std] [filename]");

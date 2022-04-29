@@ -21,18 +21,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-mpc_parser_t *Number;
-mpc_parser_t *Double;
-mpc_parser_t *Symbol;
-mpc_parser_t *String;
-mpc_parser_t *Comment;
-mpc_parser_t *Import;
-mpc_parser_t *Sexpr;
-mpc_parser_t *Qexpr;
-mpc_parser_t *Expr;
-mpc_parser_t *LExpression;
+mpc_parser_t* Number;
+mpc_parser_t* Double;
+mpc_parser_t* Symbol;
+mpc_parser_t* String;
+mpc_parser_t* Comment;
+mpc_parser_t* Sexpr;
+mpc_parser_t* Qexpr;
+mpc_parser_t* Expr;
+mpc_parser_t* LExpression;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     /*debug mode switch*/
 
@@ -47,63 +46,59 @@ int main(int argc, char **argv)
     LExpression = mpc_new("lexpression");
     /*Language Definition*/
     mpca_lang(MPCA_LANG_DEFAULT, "                               \
-        number    : /[-]?[0-9]+/;                               \
-        double    : /\\s[-]?[0-9]*\\.?[0-9]+/;                    \
+        number    : /-?[0-9]+/;                             \
+        double    : /`-?[0-9]*\\.?[0-9]+`/;                    \
         symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;            \
         string    : /\"(\\\\.|[^\"])*\"/;                        \
         comment   : /;[^\\r\\n]*/;                               \
         sexpr     : '[' <expr>* ']' ;                            \
         qexpr     : '{' <expr>* '}' ;                            \
-        expr      : <number> | <double> | <symbol> | <string> | <comment> \
+        expr      : <number>|<double>|<symbol>|<string>|<comment>\
                   | <sexpr> | <qexpr> ;                          \
         lexpression     : /^/ <expr>* /$/ ;                      \
         ",
-              Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr,
-              LExpression); // notice, can't place space after '\' !
+        Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr,
+        LExpression); // notice, can't place space after '\' !
 
     /*init the environment*/
 
-    lenv *e = lenv_new();
+    lenv* e = lenv_new();
     lenv_builtin_init_list(e);
 
     int print_tree = check_commandline_argument(&argc, argv, e);
-    if (argc == 1)
-    {
+    if (argc == 1) {
 
         /*print some welcome words*/
         lec_print_headline();
 
-        while (1)
-        {
+        while (1) {
 
-            char *input = readline("Lachesis > ");
+            char* input = readline("Lachesis > ");
             /*Attention! readline needs -lreadline argument!*/
-            if (strcmp(input, "q") == 0)
-            {
+            if (strcmp(input, "q") == 0) {
                 puts("Bye!");
                 exit(0);
             }
 
-            if (strcmp(input, "h") == 0)
-            {
-                print_help(input);
+            if (strcmp(input, "h") == 0) {
+                print_help();
                 continue;
             }
             add_history(input);
 
             mpc_result_t raw;
 
-            if (mpc_parse("<stdin>", input, LExpression, &raw))
-            {
+            if (mpc_parse("<stdin>", input, LExpression, &raw)) {
                 if (print_tree)
                     mpc_ast_print(raw.output);
-                LObject *x = lobj_eval(e, lobj_read(raw.output));
+                LObject* x = lobj_eval(e, lobj_read(raw.output));
                 lobj_print_line(x);
                 lobj_delete(x);
                 mpc_ast_delete(raw.output);
-            }
-            else
-            {
+                if (print_tree)
+                    fflush(stderr);
+
+            } else {
                 mpc_err_print(raw.error);
                 mpc_err_delete(raw.error);
             }
@@ -111,14 +106,13 @@ int main(int argc, char **argv)
         }
     }
     /*file support*/
-    if (argc >= 2)
-    {
-        for (int i = 1; i < argc; ++i)
-        {
-            LObject *args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));
-            LObject *x = built_in_import(e, args);
-            if (x->type == LOBJ_ERR)
-            {
+    if (argc >= 2) {
+        for (int i = 1; i < argc; ++i) {
+            LObject* args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));
+            LObject* x = built_in_import(e, args);
+            if (print_tree)
+                fflush(stderr);
+            if (x->type == LOBJ_ERR) {
                 lobj_print_line(x);
             }
             lobj_delete(x);
@@ -126,8 +120,8 @@ int main(int argc, char **argv)
     }
     /*before end of code*/
     lenv_del(e);
-    mpc_cleanup(
-        9, Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr, LExpression);
+    mpc_cleanup(9, Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr,
+        LExpression);
 
     return 0;
 }

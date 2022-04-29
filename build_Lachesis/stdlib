@@ -55,12 +55,31 @@
     [[\ {  } var] []]
 }]
 
-
+; =========================
 ; std math
+; =========================
+
+; const define
+
+[def {MATH_E} `2.718`]
+[def {MATH_LN2} `0.693`]
+[def {MATH_LN10} `2.303`]
+[def {MATH_LOG2} `1.443`]
+[def {MATH_LOG10} `0.434`]
+[def {MATH_PI} `3.141`]
+[def {MATH_SQRT2} `1.414`]
+
+; function 
+
 [func {abs num} {
       if [> num 0]
       {num}
-      {- 0 num}
+      {num}
       }]
-[print "standard library loaded successfully!"]
+
+
+
+; check if it is ok to run
+[print "standard libarary loaded!"]
+
 
