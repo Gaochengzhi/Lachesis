@@ -6,6 +6,8 @@ char *lobj_type_name(int typename)
     {
     case LOBJ_NUM:
         return "Number";
+    case LOBJ_DOUBLE:
+        return "double";
     case LOBJ_ERR:
         return "Error";
     case LOBJ_STR:

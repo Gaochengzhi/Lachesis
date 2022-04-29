@@ -15,6 +15,7 @@ typedef LObject *(*lbuiltin)(lenv *, LObject *);
 enum ltype
 {
     LOBJ_NUM,
+    LOBJ_DOUBLE,
     LOBJ_ERR,
     LOBJ_SYMBOL,
     LOBJ_SEXPR,
@@ -28,6 +29,7 @@ struct _lobj
 
     // Basic_types
     long num;
+    double double_num;
     char *err;
     char *symbol;
     char *string;
@@ -50,7 +52,7 @@ struct _lenv
     lenv *parent;
     int count;
     char **symbol_list;
-    LObject **func_object_list;
+    LObject **functor_list;
 };
 
 // function interfaces

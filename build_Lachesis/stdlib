@@ -56,8 +56,11 @@
 }]
 
 
-
-; check if it is ok to run
-[print "Hello Word!"]
-
+; std math
+[func {abs num} {
+      if [> num 0]
+      {num}
+      {- 0 num}
+      }]
+[print "standard library loaded successfully!"]
 

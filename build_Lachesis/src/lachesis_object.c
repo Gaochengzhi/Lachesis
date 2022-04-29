@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 18.02.2022
- * Last Modified Date: 21.04.2022
+ * Last Modified Date: 27.04.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -26,6 +26,13 @@ LObject *lobj_number(long number)
     return obj;
 }
 
+LObject *lobj_double(double double_num)
+{
+    LObject *obj = malloc(sizeof(LObject));
+    obj->type = LOBJ_DOUBLE;
+    obj->double_num = double_num;
+    return obj;
+}
 /*sending lobj the error messages and tag it */
 LObject *lobj_error(char *fmt, ...)
 {
@@ -101,45 +108,47 @@ LObject *lobj_add(LObject *target_obj, LObject *sub_obj)
     return target_obj;
 }
 
-void lobj_del(LObject *o)
+void lobj_delete(LObject *obj)
 {
     /*lbug_print_slsl("delete lobj:", (long)o, "type", o->type); // debug line*/
-    switch (o->type)
+    switch (obj->type)
     {
         /*number and function type will let it go*/
     case LOBJ_NUM:
         break;
+    case LOBJ_DOUBLE:
+        break;
     case LOBJ_FUNC:
-        if (!o->builtin_func)
+        if (!obj->builtin_func)
         {
             /*user-define cases*/
-            lenv_del(o->env);
-            lobj_del(o->argument);
-            lobj_del(o->body);
+            lenv_del(obj->env);
+            lobj_delete(obj->argument);
+            lobj_delete(obj->body);
         }
         break;
         /*error or symbol will free its string data*/
     case LOBJ_STR:
-        free(o->string);
+        free(obj->string);
         break;
     case LOBJ_ERR:
-        free(o->err);
+        free(obj->err);
         break;
     case LOBJ_SYMBOL:
-        free(o->symbol);
+        free(obj->symbol);
         break;
 
         /*q or s-expression will free all its data*/
     case LOBJ_QEXPR:
     case LOBJ_SEXPR:
-        for (int i = 0; i < o->count; ++i)
+        for (int i = 0; i < obj->count; ++i)
         {
-            lobj_del(o->sub_obj[i]);
+            lobj_delete(obj->sub_obj[i]);
         }
         break;
     }
     /*free the memory allocated to contain the pointers*/
-    free(o);
+    free(obj);
 }
 
 LObject *lobj_read_num(mpc_ast_t *t)
@@ -153,6 +162,13 @@ LObject *lobj_read_num(mpc_ast_t *t)
                            : lobj_error("Too long or invalid number!");
 }
 
+LObject *lobj_read_double(mpc_ast_t *t)
+{
+
+    errno = 0;
+    double x = strtod(t->contents, NULL);
+    return errno != ERANGE ? lobj_double(x) : lobj_error("Too long or invalid number!");
+}
 LObject *lobj_read_str(mpc_ast_t *t)
 {
     /*drop the last \0*/
@@ -173,6 +189,10 @@ LObject *lobj_read(mpc_ast_t *tree)
         return lobj_read_num(tree);
     }
 
+    if (strstr(tree->tag, "double"))
+    {
+        return lobj_read_double(tree);
+    }
     if (strstr(tree->tag, "symbol"))
     {
         return lobj_symbol(tree->contents);
@@ -242,6 +262,10 @@ void lobj_print(LObject *obj)
         printf("%li", obj->num);
         break;
 
+    case LOBJ_DOUBLE:
+        printf("%lf", obj->double_num);
+        break;
+
     case LOBJ_ERR:
         printf("Error: %s", obj->err);
         break;
@@ -278,13 +302,57 @@ void lobj_print(LObject *obj)
     }
 }
 
+void lobj_fprint(FILE *fd, LObject *obj)
+{
+    switch (obj->type)
+    {
+    case LOBJ_NUM:
+        fprintf(fd, "%li", obj->num);
+        break;
+
+    case LOBJ_DOUBLE:
+        fprintf(fd, "%lf", obj->double_num);
+        break;
+    case LOBJ_ERR:
+        fprintf(fd, "Error: %s", obj->err);
+        break;
+
+    case LOBJ_STR:
+        lobj_fprint_string(fd, obj);
+        break;
+    case LOBJ_FUNC:
+        if (obj->builtin_func)
+        {
+            fprintf(fd, "<builtin_function>");
+        }
+        else
+        {
+            fprintf(fd, "[\\ ");
+            lobj_fprint(fd, obj->argument);
+            putchar(' ');
+            lobj_fprint(fd, obj->body);
+            putchar(']');
+        }
+        break;
+
+    case LOBJ_SEXPR:
+        break;
+
+    case LOBJ_QEXPR:
+        break;
+    case LOBJ_SYMBOL:
+        fprintf(fd, "%s", obj->symbol);
+        break;
+    }
+}
+void lobj_fprint_string(FILE *fd, LObject *string_obj)
+{
+    fprintf(fd, "%s", string_obj->string);
+}
+
 void lobj_print_string(LObject *string_obj)
 {
-    char *escape_str = malloc(sizeof(string_obj->string) + 1);
-    strcpy(escape_str, string_obj->string);
-    escape_str = mpcf_escape(escape_str);
-    printf("%s", escape_str);
-    free(escape_str);
+    printf("%s", string_obj->string);
 }
 void lobj_print_expr(LObject *obj, char begin_symbol, char end_symbol)
 {
@@ -315,7 +383,7 @@ LObject *lobj_eval(lenv *e, LObject *obj)
     if (obj->type == LOBJ_SYMBOL)
     {
         LObject *x = lenv_get_copied_obj_from_env(e, obj);
-        lobj_del(obj);
+        lobj_delete(obj);
         return x;
     }
     if (obj->type == LOBJ_SEXPR)
@@ -358,13 +426,13 @@ LObject *lobj_eval_sexpr(lenv *e, LObject *obj)
     LObject *func = lobj_pop(obj, 0);
     if (func->type != LOBJ_FUNC)
     {
-        lobj_del(func);
-        lobj_del(obj);
+        lobj_delete(func);
+        lobj_delete(obj);
         return lobj_error("first element is not a function");
     }
 
     LObject *result = lobj_call(e, func, obj);
-    lobj_del(func);
+    lobj_delete(func);
     return result;
 }
 
@@ -379,20 +447,20 @@ LObject *lobj_join(LObject *x, LObject *y)
     return x;
 }
 /*Pop up the i-th item inside the cell, return the poped one*/
-LObject *lobj_pop(LObject *o, int i)
+LObject *lobj_pop(LObject *obj, int i)
 {
 
     lbug_print_sdsl(
-        "pop lobj the number:", i, "on pointer", (long)o); // debug line
+        "pop lobj the number:", i, "on pointer", (long)obj); // debug line
 
-    LObject *x = o->sub_obj[i];
+    LObject *x = obj->sub_obj[i];
     /*void *memmove( void *str1, const void *str2, size_t n );*/
-    memmove(&o->sub_obj[i], &o->sub_obj[i + 1],
-            sizeof(LObject *) * (o->count-- - i - 1));
+    memmove(&obj->sub_obj[i], &obj->sub_obj[i + 1],
+            sizeof(LObject *) * (obj->count-- - i - 1));
     // remember to decrease the o->count!
 
     /*realloc the memory we used*/
-    o->sub_obj = realloc(o->sub_obj, sizeof(LObject *) * o->count);
+    obj->sub_obj = realloc(obj->sub_obj, sizeof(LObject *) * obj->count);
     return x;
 }
 
@@ -400,7 +468,7 @@ LObject *lobj_pop(LObject *o, int i)
 LObject *lobj_take_out(LObject *obj, int index)
 {
     LObject *x = lobj_pop(obj, index);
-    lobj_del(obj);
+    lobj_delete(obj);
     return x;
 }
 
@@ -413,51 +481,55 @@ LObject *lobj_func(lbuiltin func)
 }
 
 /*copy a new one and return it*/
-LObject *lobj_copy(LObject *o)
+LObject *lobj_copy(LObject *obj)
 {
     LObject *x = malloc(sizeof(LObject));
-    x->type = o->type;
+    x->type = obj->type;
 
-    switch (o->type)
+    switch (obj->type)
     {
     case LOBJ_FUNC:
-        if (o->builtin_func)
+        if (obj->builtin_func)
         {
             /*built in function cases*/
-            x->builtin_func = o->builtin_func;
+            x->builtin_func = obj->builtin_func;
         }
         else
         {
             /*self define cases*/
             x->builtin_func = NULL;
-            x->env = lenv_copy(o->env);
-            x->body = lobj_copy(o->body);
-            x->argument = lobj_copy(o->argument);
+            x->env = lenv_copy(obj->env);
+            x->body = lobj_copy(obj->body);
+            x->argument = lobj_copy(obj->argument);
         }
         break;
 
     case LOBJ_NUM:
-        x->num = o->num;
+        x->num = obj->num;
+        break;
+
+    case LOBJ_DOUBLE:
+        x->double_num = obj->double_num;
         break;
     case LOBJ_ERR:
-        x->err = malloc(strlen(o->err) + 1);
-        strcpy(x->err, o->err);
+        x->err = malloc(strlen(obj->err) + 1);
+        strcpy(x->err, obj->err);
         break;
     case LOBJ_STR:
-        x->string = malloc(strlen(o->string) + 1);
-        strcpy(x->string, o->string);
+        x->string = malloc(strlen(obj->string) + 1);
+        strcpy(x->string, obj->string);
         break;
     case LOBJ_SYMBOL:
-        x->symbol = malloc(strlen(o->symbol) + 1);
-        strcpy(x->symbol, o->symbol);
+        x->symbol = malloc(strlen(obj->symbol) + 1);
+        strcpy(x->symbol, obj->symbol);
         break;
     case LOBJ_SEXPR:
     case LOBJ_QEXPR:
-        x->count = o->count;
+        x->count = obj->count;
         x->sub_obj = malloc(sizeof(LObject *) * x->count);
         for (int i = 0; i < x->count; ++i)
         {
-            x->sub_obj[i] = lobj_copy(o->sub_obj[i]);
+            x->sub_obj[i] = lobj_copy(obj->sub_obj[i]);
         }
         break;
     }
@@ -487,43 +559,44 @@ LObject *lobj_call(lenv *e, LObject *func, LObject *obj)
 
     /*the arguments we have and that we need*/
     int given_number = obj->count;
-    int total_number = func->argument->count;
+    int should_number = func->argument->count;
 
     while (obj->count)
     {
         if (func->argument->count == 0)
         {
-            lobj_del(obj);
+            lobj_delete(obj);
             return lobj_error(
                 "Function passed too many arguments.\n Got %d, Expected %d",
-                given_number, total_number);
+                given_number, should_number);
         }
 
         /*Pop the first symbol from the argument;*/
         LObject *symbol_obj = lobj_pop(func->argument, 0);
 
+        /* variable parameter case */
         if (strcmp(symbol_obj->symbol, "&") == 0)
         {
             if (func->argument->count != 1)
             {
-                lobj_del(obj);
+                lobj_delete(obj);
                 return lobj_error("Function argument invalid. Symbol '&' not "
                                   "followed by single symbol.");
             }
-            LObject *new_symbol = lobj_pop(func->argument, 0);
-            lenv_put_function(func->env, new_symbol, built_in_list(e, obj));
-            lobj_del(obj);
+            LObject *next_symbol = lobj_pop(func->argument, 0);
+            lenv_put_symbol(func->env, next_symbol, built_in_list(e, obj));
+            lobj_delete(obj);
             break;
         }
         /*Pop the next argument from the list*/
         LObject *value = lobj_pop(obj, 0);
 
-        lenv_put_function(func->env, symbol_obj, value);
-        lobj_del(symbol_obj);
-        lobj_del(value);
+        lenv_put_symbol(func->env, symbol_obj, value);
+        lobj_delete(symbol_obj);
+        lobj_delete(value);
     }
 
-    lobj_del(obj);
+    lobj_delete(obj);
     if (func->argument->count > 0 && strcmp(func->argument->sub_obj[0]->symbol, "&") == 0)
     {
         if (func->argument->count != 2)
@@ -531,15 +604,15 @@ LObject *lobj_call(lenv *e, LObject *func, LObject *obj)
             return lobj_error("Function argument invalid. Symbol '&' not "
                               "followed by single symbol.");
         }
-        lobj_del(lobj_pop(func->argument, 0));
+        lobj_delete(lobj_pop(func->argument, 0));
         LObject *symbol = lobj_pop(func->argument, 0);
         LObject *value = lobj_qexpr();
-        lenv_put_function(func->env, symbol, value);
-        lobj_del(symbol);
-        lobj_del(value);
+        lenv_put_symbol(func->env, symbol, value);
+        lobj_delete(symbol);
+        lobj_delete(value);
     }
 
-    if (func->argument->count == 0)
+    if (func->argument->count == 0) // finished
     {
         func->env->parent = e;
         return built_in_eval(
@@ -561,6 +634,8 @@ bool lobj_equal(LObject *x, LObject *y)
     {
     case LOBJ_NUM:
         return x->num == y->num;
+    case LOBJ_DOUBLE:
+        return x->double_num == y->double_num;
     case LOBJ_ERR:
         return (strcmp(x->err, y->err) == 0);
     case LOBJ_STR:

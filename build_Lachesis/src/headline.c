@@ -3,12 +3,13 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 15.04.2022
+ * Last Modified Date: 27.04.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "headline.h"
 #include "lachesis_type.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #define _COSTOMIZE "default"
 void lec_print_headline()
@@ -59,19 +60,24 @@ void save_runtime_info_to_log()
     fclose(file);
 }
 
-void check_commandline_argument(int *argc, char **argv, lenv *e)
+int check_commandline_argument(int *argc, char **argv, lenv *e)
 {
-    for (int i = 1; i < *argc; i++)
+    int len = *argc;
+    int return_number = 0;
+    for (int i = 1; i < len; i++)
     {
         if (argv[i][0] == '-')
         {
+
             *argc = *argc - 1;
             if (argv[i][1] == 'g')
             {
                 _debug_mode = true;
                 save_runtime_info_to_log();
+                return_number = 1;
+                goto new;
             }
-            else if (strstr(argv[i], "--std"))
+            if (strstr(argv[i], "-std"))
             {
                 LObject *args = lobj_add(lobj_sexpr(), lobj_string("stdlib"));
                 LObject *x = built_in_import(e, args);
@@ -79,85 +85,60 @@ void check_commandline_argument(int *argc, char **argv, lenv *e)
                 {
                     lobj_print_line(x);
                 }
-                lobj_del(x);
+                lobj_delete(x);
+                goto new;
+            }
+            if (strstr(argv[i], "-h"))
+            {
+                print_help();
+                exit(0);
             }
             else
             {
-
-                puts("Invalid option.");
+                printf("Lachesis: Invalid argument %s\n", argv[i]);
+                puts(
+                    "usage: lac [-gstdhelp] [-h -help] [-g] [-std] [filename]");
+                exit(0);
             }
-            for (int arg_index = i; arg_index <= *argc; ++arg_index)
+            new : for (int arg_index = i; arg_index < len - 1; ++arg_index)
             {
                 argv[arg_index] = argv[arg_index + 1];
             }
         }
     }
+    return return_number;
 }
-void print_help(char *input)
+void print_help()
 {
-    input += 2;
-    if (strstr(input, "basic") != NULL)
-    {
-        puts("basic: \
-            \n - [* 12 14][+ 15 19] \
-            ");
-        putchar('\n');
-    }
-    if (strstr(input, "define") != NULL)
-    {
-        puts("define: \
-            \n def {x} 100 \
-            \n +x 1 \
-            \n \
-            \n def {a b} 5 6 \
-            \n + ab \
-            ");
-        putchar('\n');
-    }
-    if (strstr(input, "head") != NULL)
-    {
-        puts("head: \
-            \n argument must a Q-expression \
-            \n head {12 13 14} => return {12 }");
-        putchar('\n');
-    }
-    if (strstr(input, "tail") != NULL)
-    {
-        puts("tail: \
-            \n argument must a Q-expression \
-            \n tail {12 13 14} => return {12 14}");
-        putchar('\n');
-    }
-    if (strstr(input, "func") != NULL)
-    {
-        puts("func: \
-            \n [\\ {x y} {+ x y}] 10 20 \
-            \n def {add} [\\ {x y} {+ x y}] \
-            \n add 10 20\
-            ");
-        putchar('\n');
-    }
-    if (strstr(input, "if") != NULL)
-    {
-        puts("define: \
-            \n def {x y} 100 200\
-            \n if [ == x y ] {+ x y} {- x y} => -100\
-            ");
-        putchar('\n');
-    }
-    if (strstr(input, "help") != NULL)
-    {
-        puts("Check:\
-                \n  basic \
-                \n  define\
-                \n  head\
-                \n  tail\
-                \n  func\
-                \n  if\
-                \n  ");
-    }
-    else
-    {
-        puts("No help find, check 'h check'");
-    }
+    puts("------ commandline argument ------");
+    puts("-std \t\t import standard libarary to imteractive prompt.");
+    puts("-h \t\t print help info to the stdout.");
+    puts("-g \t\t save runtime info to log.txt.");
+    puts("------ language syntax -----");
+    puts("|----------------------------------------- \t| "
+         "--------------------------------------------------\t|");
+    puts("|interface                                 \t| example              "
+         "                             \t|");
+    puts("|----------------------------------------- \t| "
+         "--------------------------------------------------\t|");
+    puts("|[+-*/==!=><≥≤] <sexpr>*                   \t| * 1 5 => 5           "
+         "                             \t|");
+    puts("|head <qexpr> => <qexpr>                   \t| head {1 2 3} => {1}  "
+         "                             \t|");
+    puts("|tail <qexpr> => <qexpr>                   \t| tail {1 2 3} => {2 "
+         "3}                             \t|");
+    puts("|list <sexpr> => <qexpr>                   \t| list [+ 1 2] => {+ 1 "
+         "2}                           \t|");
+    puts("|join <qexpr> => <qexpr>                   \t| join {+} {1 2} => {+ "
+         "1 2}                         \t|");
+    puts("|if <bool> <qexpr> <qexpr> => <sexpr>      \t| if [== x y] {+ x y} "
+         "{- x y}                       \t|");
+    puts("|print <string>* => <string>               \t| print \"hello "
+         "world\" => hello world              \t|");
+    puts("|fprint <file_name> <string>* => <string>  \t| fprint \"new.txt\" "
+         "\"hello world\" => new:hello world\t|");
+    puts("|import <string>*                          \t| import \"stdlib\"    "
+         "                             \t|");
+    puts("|----------------------------------------- \t| "
+         "--------------------------------------------------\t|\n");
 }

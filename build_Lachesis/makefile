@@ -17,12 +17,12 @@ obj = $(src:%.c=%.o)
 debug:
 	#-g means gdb
 	$(cc) -Wall -g  -lreadline  $(src) 
-	mv a.out Lachesis
+	mv a.out lac
 install:
-	$(cc) -Wall -O3  -lreadline  $(src) 
-	mv a.out build/Lachesis
+	$(cc) -Wall  -lreadline  $(src) 
+	mv a.out build/lac
 run: 
-	./Lachesis
+	./lac
 clean:
 	-@rm -f Lachesis
 	-@rm -f src/*.o test/*.o

@@ -20,7 +20,7 @@ lenv *lenv_new(void)
     e->parent = NULL;
     e->count = 0;
     e->symbol_list = NULL;
-    e->func_object_list = NULL;
+    e->functor_list = NULL;
     return e;
 }
 
@@ -29,11 +29,11 @@ void lenv_del(lenv *e)
     for (int i = 0; i < e->count; ++i)
     {
         free(e->symbol_list[i]);
-        lobj_del(e->func_object_list[i]);
+        lobj_delete(e->functor_list[i]);
     }
 
     free(e->symbol_list);
-    free(e->func_object_list);
+    free(e->functor_list);
     free(e);
 }
 
@@ -43,12 +43,12 @@ lenv *lenv_copy(lenv *e)
     new->parent = e->parent;
     new->count = e->count;
     new->symbol_list = malloc(sizeof(char *) * e->count);
-    new->func_object_list = malloc(sizeof(LObject *) * e->count);
+    new->functor_list = malloc(sizeof(LObject *) * e->count);
     for (int i = 0; i < new->count; ++i)
     {
         new->symbol_list[i] = malloc(strlen(e->symbol_list[i]) + 1);
         strcpy(new->symbol_list[i], e->symbol_list[i]);
-        new->func_object_list[i] = lobj_copy(e->func_object_list[i]);
+        new->functor_list[i] = lobj_copy(e->functor_list[i]);
     }
     return new;
 }
@@ -61,7 +61,7 @@ LObject *lenv_get_copied_obj_from_env(lenv *mother_env, LObject *son_obj)
     {
         if (strcmp(mother_env->symbol_list[i], son_obj->symbol) == 0)
         {
-            return lobj_copy(mother_env->func_object_list[i]);
+            return lobj_copy(mother_env->functor_list[i]);
         }
     }
 
@@ -75,47 +75,46 @@ LObject *lenv_get_copied_obj_from_env(lenv *mother_env, LObject *son_obj)
     }
 }
 
-void lenv_put_function(lenv *e, LObject *func_symbol_obj, LObject *func_ptr)
+void lenv_put_symbol(lenv *e, LObject *symbol_obj, LObject *functor)
 {
     /*iterate e, if function's symbol already in e, delete the old one */
     /*and replace with the new one;*/
     for (int i = 0; i < e->count; ++i)
     {
-        if (strcmp(e->symbol_list[i], func_symbol_obj->symbol) == 0)
+        if (strcmp(e->symbol_list[i], symbol_obj->symbol) == 0)
         {
-            lobj_del(e->func_object_list[i]);
-            e->func_object_list[i] = lobj_copy(func_ptr);
+            lobj_delete(e->functor_list[i]);
+            e->functor_list[i] = lobj_copy(functor);
             return;
         }
     }
 
     /*if not repeated found, allocate for new obj */
     e->count++;
-    e->func_object_list = realloc(e->func_object_list, sizeof(LObject *) * e->count);
+    e->functor_list = realloc(e->functor_list, sizeof(LObject *) * e->count);
     e->symbol_list = realloc(e->symbol_list, sizeof(char *) * e->count);
-    /*copy func_ptr and symbol*/
-    e->func_object_list[e->count - 1] = lobj_copy(func_ptr);
-    e->symbol_list[e->count - 1] = malloc(strlen(func_symbol_obj->symbol) + 1);
-    strcpy(e->symbol_list[e->count - 1], func_symbol_obj->symbol);
+    e->functor_list[e->count - 1] = lobj_copy(functor);
+    e->symbol_list[e->count - 1] = malloc(strlen(symbol_obj->symbol) + 1);
+    strcpy(e->symbol_list[e->count - 1], symbol_obj->symbol);
 }
 
 void lenv_add_builtin_func(lenv *e, char *symbol_name, lbuiltin func)
 {
     LObject *symbol_obj = lobj_symbol(symbol_name);
-    LObject *func_obj = lobj_func(func);
-    lenv_put_function(e, symbol_obj, func_obj);
-    lobj_del(symbol_obj);
-    lobj_del(func_obj);
+    LObject *functor = lobj_func(func);
+    lenv_put_symbol(e, symbol_obj, functor);
+    lobj_delete(symbol_obj);
+    lobj_delete(functor);
 }
 
-void lenv_define(lenv *e, LObject *symbol_obj, LObject *func_obj)
+void lenv_define(lenv *e, LObject *symbol_obj, LObject *functor)
 {
     /*find e->parent's parent... */
     while (e->parent)
     {
         e = e->parent;
     }
-    lenv_put_function(e, symbol_obj, func_obj);
+    lenv_put_symbol(e, symbol_obj, functor);
 }
 void lenv_builtin_init_list(lenv *e)
 {
@@ -147,6 +146,7 @@ void lenv_builtin_init_list(lenv *e)
     lenv_add_builtin_func(e, "import", built_in_import);
     lenv_add_builtin_func(e, "error", built_in_error);
     lenv_add_builtin_func(e, "print", built_in_print);
+    lenv_add_builtin_func(e, "fprint", built_in_fprint);
 
     /*__SYSTEM__*/
 

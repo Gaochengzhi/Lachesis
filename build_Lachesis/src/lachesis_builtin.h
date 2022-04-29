@@ -43,6 +43,7 @@ LObject *built_in_if(lenv *e, LObject *obj);
 LObject *built_in_put(lenv *e, LObject *obj);
 LObject *built_in_lambda(lenv *e, LObject *obj);
 LObject *built_in_import(lenv *e, LObject *obj);
+LObject *built_in_fprint(lenv *e, LObject *obj);
 LObject *built_in_print(lenv *e, LObject *obj);
 LObject *built_in_error(lenv *e, LObject *obj);
 

@@ -22,6 +22,7 @@
 #include <string.h>
 
 mpc_parser_t *Number;
+mpc_parser_t *Double;
 mpc_parser_t *Symbol;
 mpc_parser_t *String;
 mpc_parser_t *Comment;
@@ -36,6 +37,7 @@ int main(int argc, char **argv)
     /*debug mode switch*/
 
     Number = mpc_new("number");
+    Double = mpc_new("double");
     Symbol = mpc_new("symbol");
     String = mpc_new("string");
     Comment = mpc_new("comment");
@@ -45,17 +47,18 @@ int main(int argc, char **argv)
     LExpression = mpc_new("lexpression");
     /*Language Definition*/
     mpca_lang(MPCA_LANG_DEFAULT, "                               \
-        number    : /-?[0-9]+/ ;                                 \
+        number    : /[-]?[0-9]+/;                               \
+        double    : /\\s[-]?[0-9]*\\.?[0-9]+/;                    \
         symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;            \
         string    : /\"(\\\\.|[^\"])*\"/;                        \
         comment   : /;[^\\r\\n]*/;                               \
         sexpr     : '[' <expr>* ']' ;                            \
         qexpr     : '{' <expr>* '}' ;                            \
-        expr      : <number>|<symbol>|<string>|<comment>\
+        expr      : <number> | <double> | <symbol> | <string> | <comment> \
                   | <sexpr> | <qexpr> ;                          \
         lexpression     : /^/ <expr>* /$/ ;                      \
         ",
-              Number, Symbol, String, Comment, Sexpr, Qexpr, Expr,
+              Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr,
               LExpression); // notice, can't place space after '\' !
 
     /*init the environment*/
@@ -63,7 +66,7 @@ int main(int argc, char **argv)
     lenv *e = lenv_new();
     lenv_builtin_init_list(e);
 
-    check_commandline_argument(&argc, argv, e);
+    int print_tree = check_commandline_argument(&argc, argv, e);
     if (argc == 1)
     {
 
@@ -81,7 +84,7 @@ int main(int argc, char **argv)
                 exit(0);
             }
 
-            if (strncmp(input, "h ", 2) == 0)
+            if (strcmp(input, "h") == 0)
             {
                 print_help(input);
                 continue;
@@ -92,9 +95,11 @@ int main(int argc, char **argv)
 
             if (mpc_parse("<stdin>", input, LExpression, &raw))
             {
+                if (print_tree)
+                    mpc_ast_print(raw.output);
                 LObject *x = lobj_eval(e, lobj_read(raw.output));
                 lobj_print_line(x);
-                lobj_del(x);
+                lobj_delete(x);
                 mpc_ast_delete(raw.output);
             }
             else
@@ -116,13 +121,13 @@ int main(int argc, char **argv)
             {
                 lobj_print_line(x);
             }
-            lobj_del(x);
+            lobj_delete(x);
         }
     }
     /*before end of code*/
     lenv_del(e);
     mpc_cleanup(
-        8, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, LExpression);
+        9, Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr, LExpression);
 
     return 0;
 }

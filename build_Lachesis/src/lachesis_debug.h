@@ -25,7 +25,7 @@ void lbug_print_sdsl(char *s1, int l1, char *s2, long l2);
     if (!(conditon))                                   \
     {                                                  \
         LObject *err = lobj_error(fmt, ##__VA_ARGS__); \
-        lobj_del(args);                                \
+        lobj_delete(args);                             \
         return err;                                    \
     }
 #endif
