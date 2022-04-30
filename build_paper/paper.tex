@@ -1,0 +1,249 @@
+\documentclass[UTF8]{ctexart}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\usepackage{geometry}
+\geometry{
+ a4paper,
+ top=30mm,
+ }
+\lfoot{}
+\usepackage{dirtytalk}
+\allowdisplaybreaks
+\title{基于lambda演算的函数式语言解释器的设计与实现}
+\author{高成志}
+\date{\today}
+\begin{document}
+\maketitle
+\newpage
+\begin{abstract}
+    本文 着重于 函数式语言的一种实现 回顾 计算理论 针对解释器构建的一些细节问题 
+\end{abstract}
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{计算理论基础}
+
+\subsection{从最抽象开始——什么是计算？}
+
+\say{Computation is any type of calculation that includes both arithmetical and
+non-arithmetical steps and which follows a well-defined model\cite{wiki1}}
+
+
+\subsection{lamdba演算}
+
+Lambda演算（也写作$\lambda$ 演算）是数理逻辑中的一个形式系统（formal system），用于表达基于函数式抽象模型和变量绑定与替换应用的计算模型。它是一种通用的计算模型（与图灵机等价），由数学家Alonzo Church 在 1930 年代发明。
+
+Lambda 演算包括构造 lambda 项并对它们执行的归约操作（reduction operations）。在 lambda 演算的最简单形式中，仅使用以下规则构建项：
+
+\begin{table}[]
+\begin{tabular}{lll}
+\hline
+语法  & 名称   & 描述        \\
+\hline
+x               & 变量    &   标识符名称，用来匹配函数中的某个名字\\
+($\lambda$ x.M) & 函数定义 & x为变量名，M为函数体，默认采用波兰表达式。例如自增函数：$\lambda$ x.+ x 1\\
+MN              & 函数应用 &函数值在参数前面，如($\lambda$ x . plus x x) y = (plus y y) \\
+\hline
+\end{tabular}
+\end{table} 
+
+
+\subsubsection{}
+
+
+
+\section{解释器架构设计}
+\subsection{类型设计}
+\lstset{
+    numbers=left, 
+    numberstyle= \tiny, 
+    keywordstyle= \color{ blue!70},
+    commentstyle= \color{red!50!green!50!blue!50}, 
+    frame=shadowbox, % 阴影效果
+    rulesepcolor= \color{ red!20!green!20!blue!20} ,
+    escapeinside=``, % 英文分号中可写入中文
+    xleftmargin=2em,xrightmargin=2em, aboveskip=1em,
+    framexleftmargin=2em
+}
+\lstset{language=C}
+\begin{lstlisting}
+#include <iostream>
+using namespace std;
+
+int main()
+{
+    cout<<"hello"<<endl;
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{演算与应用}
+
+
+
+\section{工程实现}
+
+\subsection{做好准备工作}
+
+\subsubsection{一个可复用的Makefile}
+\subsection{重构——保持调理}
+
+\section{成果展示}
+
+\section{总结与回顾}
+
+
+
+\subsection{} 
+\begin{thebibliography}{}
+    \bibitem{wiki1}
+    https://en.wikipedia.org/wiki/Computation
+    \bibitem{bib2}
+    https://web.phb123.com/city/renk 
+\end{thebibliography}{66}
+\newpage
+\section{附录}
+\subsection{声明}
+\subsection{main.c}
+\lstset{
+    breaklines=true,  %代码过长则换行
+    %numbers=left, %行号在左侧显示
+    numberstyle= \small,%行号字体
+    keywordstyle= \color{blue},%关键字颜色
+    commentstyle=\color{gray}, %注释颜色
+}
+\begin{lstlisting}
+/**
+ * File              : main.c
+ * License           : The MIT License (MIT)
+ * Author            : Gao Chengzhi <2673730435@qq.com>
+ * Date              : 11.02.2022
+ * Last Modified Date: 17.02.2022
+ * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
+ */
+
+#include "../lib/mpc/mpc.h"
+#include "headline.h"
+#include "lachesis_builtin.h"
+#include "lachesis_debug.h"
+#include "lachesis_environment.h"
+#include "lachesis_object.h"
+#include "lachesis_type.h"
+#include <readline/history.h>
+#include <readline/readline.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+mpc_parser_t* Number;
+mpc_parser_t* Symbol;
+mpc_parser_t* String;
+mpc_parser_t* Comment;
+mpc_parser_t* Sexpr;
+mpc_parser_t* Qexpr;
+mpc_parser_t* Expr;
+mpc_parser_t* Lispy;
+
+int main(int argc, char** argv)
+{
+    /*debug mode switch*/
+
+    check_commandline_argument(&argc, argv);
+
+    Number = mpc_new("number");
+    Symbol = mpc_new("symbol");
+    String = mpc_new("string");
+    Comment = mpc_new("comment");
+    Sexpr = mpc_new("sexpr");
+    Qexpr = mpc_new("qexpr");
+    Expr = mpc_new("expr");
+    Lispy = mpc_new("lispy");
+    /*Language Definition*/
+    mpca_lang(MPCA_LANG_DEFAULT, "                                      \
+        number    : /-?[0-9]+/ ;                                        \
+        symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;                   \
+        string    : /\"(\\\\.|[^\"])*\"/;                               \
+        comment   : /;[^\\r\\n]*/;                                      \
+        sexpr     : '[' <expr>* ']' ;                                   \
+        qexpr     : '{' <expr>* '}' ;                                   \
+        expr      : <number> | <symbol> | <string> | <comment>| <sexpr> | <qexpr> ;                     \
+        lispy     : /^/ <expr>* /$/ ;                                   \
+        ",
+        Number, Symbol, String, Comment, Sexpr, Qexpr, Expr,
+        Lispy); // notice, can't place space after '\' !
+
+    /*init the environment*/
+
+    lenv* e = lenv_new();
+    lenv_builtin_init_list(e);
+
+    if (argc == 1) {
+
+        /*print some welcome words*/
+        lec_print_headline();
+
+        while (1) {
+
+            char* input = readline("Lachesis > ");
+            /*Attention! readline needs -lreadline argument!*/
+            if (strcmp(input, "q") == 0) {
+                puts("Bye!");
+                exit(0);
+            }
+
+            if (strncmp(input, "h ", 2) == 0) {
+                print_help(input);
+                continue;
+            }
+            add_history(input);
+
+            mpc_result_t raw;
+
+            if (mpc_parse("<stdin>", input, Lispy, &raw)) {
+                LObject* x = lobj_eval(e, lobj_read(raw.output));
+                lobj_print_line(x);
+                lobj_del(x);
+                mpc_ast_delete(raw.output);
+            } else {
+                mpc_err_print(raw.error);
+                mpc_err_delete(raw.error);
+            }
+            free(input);
+        }
+    }
+    /*file support*/
+    if (argc >= 2) {
+
+        for (int i = 1; i < argc; ++i) {
+
+            LObject* args = lobj_add(lobj_sexpr(), lobj_string(argv[i]));
+
+            LObject* x = built_in_load(e, args);
+
+            if (x->type == LOBJ_ERR) {
+                lobj_print_line(x);
+            }
+
+            lobj_del(x);
+        }
+    }
+    /*before end of code*/
+    lenv_del(e);
+    mpc_cleanup(7, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
+
+    return 0;
+}
+
+
+\end{lstlisting}
+\end{document}
+    

@@ -416,7 +416,7 @@ lambda 函数以`\` 为函数名，一个Q-表达式作为参数列表，一个Q
 
 本系统支持现代解释器通常支持的两种工作模式，一个是交互式提示符（interactive prompt）式的读取-求值-输出循环（RELP：Read–eval–print loop），用户在命令行直接输入指令后马上返回结果。另一个则由用户事先写好脚本文件，解释器依次读取脚本中的内容并执行。
 
-![inter](/Users/kounarushi/Desktop/paper/build_paper/inter.png)
+![inter](./inter.png)
 
 （两种工作模式）
 
@@ -424,7 +424,7 @@ lambda 函数以`\` 为函数名，一个Q-表达式作为参数列表，一个Q
 
 
 
-![rad](/Users/kounarushi/Desktop/paper/build_paper/rad.png)
+![rad](./rad.png)
 
 
 
@@ -432,7 +432,7 @@ lambda 函数以`\` 为函数名，一个Q-表达式作为参数列表，一个Q
 
 
 
-![未命名文件 (1)](/Users/kounarushi/Desktop/paper/build_paper/未命名文件 (1).png)解释器的总体结构如 图上所示，整个解释器以main 函数为程序起点，检查输入的命令行参数后进入相应的工作模式，调用其它模块完成演算任务。图中各模块功能简要介绍如下 :
+![未命名文件 (1)](./未命名文件 (1).png)解释器的总体结构如 图上所示，整个解释器以main 函数为程序起点，检查输入的命令行参数后进入相应的工作模式，调用其它模块完成演算任务。图中各模块功能简要介绍如下 :
 
 1. 环境模块（environment）：创建和初始化环境容器，添加符号和函数定义。
 2. 内置函数模块（builtin）：系统保留字和预置函数的开发接口，方便未来功能拓展和二次开发。
@@ -497,7 +497,7 @@ Lachesis 解释器系统用一个名为`LObject`的结构体容器表达函数�
 4. 指向函数对象的函数指针。
 5. 环境变量和存储函数对象信息。
 
-![未命名文件 (2)](/Users/kounarushi/Desktop/paper/build_paper/未命名文件 (2)-0939996.png)
+![未命名文件 (2)](./未命名文件 (2)-0939996.png)
 
 解释器内部传递的信息都由`LObject`包裹，
 
@@ -509,7 +509,7 @@ Lachesis 解释器系统用一个名为`LObject`的结构体容器表达函数�
 
 语法分析器的功能是将大量杂乱无章甚至含有非法输入的字符流通过我们自己指定捕获规则过滤后映射成函数抽象语法树。
 
-![未命名文件 (4)](/Users/kounarushi/Desktop/paper/build_paper/未命名文件 (4).png)
+![未命名文件 (4)](./未命名文件 (4).png)
 
 我们没有自己开发专用的语法解析器，那将让整个工程和论文的内容无法控制地膨胀。一个第三方的语法解析库，mpc（Micro Parser Combinators）【mpc】，被用来执行Lachesis 的语法解析工作。
 
@@ -582,7 +582,7 @@ function lobj_read(tree){
 }
 ```
 
-![code2flow_4kCaoH](/Users/kounarushi/Desktop/paper/build_paper/code2flow_4kCaoH.png)
+![code2flow_4kCaoH](./code2flow_4kCaoH.png)
 
 （当抽象语法树的`tag` 是“number”、“symbol”或“string”等$\beta $ 规范型时，直接返回含有`content` 的LObject。
 
@@ -590,7 +590,7 @@ function lobj_read(tree){
 
 
 
-![code2flow_4kCaoH (1)](/Users/kounarushi/Desktop/paper/build_paper/code2flow_4kCaoH (1).png)
+![code2flow_4kCaoH (1)](./code2flow_4kCaoH (1).png)
 
 
 
@@ -621,7 +621,7 @@ function lobj_eval_sexpr(e, obj){
 }
 ```
 
-![code2flow_4kCaoH (2)](/Users/kounarushi/Desktop/paper/build_paper/code2flow_4kCaoH (2)-0383538.png)
+![code2flow_4kCaoH (2)](./code2flow_4kCaoH (2)-0383538.png)
 
 ## 函数的创建与执行
 
@@ -668,7 +668,7 @@ function lenv_put_function(e,symbol_obj,func_obj){
 }
 ```
 
-![Screen Shot 2022-04-27 at 11.25.49 AM](/Users/kounarushi/Desktop/paper/build_paper/Screen Shot 2022-04-27 at 11.25.49 AM.png)
+![Screen Shot 2022-04-27 at 11.25.49 AM](./Screen Shot 2022-04-27 at 11.25.49 AM.png)
 
 首先，字符串 `symbol_name`  和函数指针 `func` 将会被转化成字符对象和函数对象。如果符号已经在环境容器中存在了，那么只要用新的字符对象和函子来替换旧的就可以了。如果是新出现的符号，则需要对环境容器进行扩容然后添加。
 
@@ -725,7 +725,7 @@ function built_in_var(e, obj, func_name){
 }
 ```
 
-![code2flow_7mKd5o](/Users/kounarushi/Desktop/paper/build_paper/code2flow_7mKd5o.png)
+![code2flow_7mKd5o](./code2flow_7mKd5o.png)
 
 我们以 `def {a b c} 1 2 3` 为例解释以上工作流程。首先`obj` 的第一个孩子 `{a b c}` 被提取出来成为一个`LOBJ_QEXPR`
 
@@ -792,7 +792,7 @@ function lobj_lambda(argument, body){
 
 其算法和流程图如下：
 
-![未命名文件 (3)](/Users/kounarushi/Desktop/paper/build_paper/未命名文件 (3).png)
+![未命名文件 (3)](./未命名文件 (3).png)
 
 ```js
 function lobj_call(e, func, obj){
@@ -923,7 +923,7 @@ typedef char* va_list;
 
 
 
-![Screen Shot 2022-04-27 at 4.57.25 PM](/Users/kounarushi/Desktop/paper/build_paper/Screen Shot 2022-04-27 at 4.57.25 PM.png)
+![Screen Shot 2022-04-27 at 4.57.25 PM](./Screen Shot 2022-04-27 at 4.57.25 PM.png)
 
 
 
@@ -1029,7 +1029,7 @@ clang
 libreadine-dev
 ```
 
-![IMG_2711](/Users/kounarushi/Desktop/paper/build_paper/IMG_2711.JPEG)
+![IMG_2711](./IMG_2711.JPEG)
 
 （在不同UNIX 机器上的运行）
 
@@ -1053,7 +1053,7 @@ libreadine-dev
 
 在字符串长度超过50字符时有一定概率触发malloc 分配内存失败，潜在的原因是对字符串尾部`"` 的裁剪导致了内存被污染。但是截止四月底笔者任然没有好的解决方法。
 
-![Screen Shot 2022-04-28 at 10.16.37 PM](/Users/kounarushi/Desktop/paper/build_paper/Screen Shot 2022-04-28 at 10.16.37 PM.png)
+![Screen Shot 2022-04-28 at 10.16.37 PM](./Screen Shot 2022-04-28 at 10.16.37 PM.png)
 
 一个可替代的选项是利用`print`函数能接收可变参数的特点将一段长字符切分成多段表达：
 
@@ -1062,17 +1062,17 @@ print "This is a very long sentence for testing the potential crash happened in 
 print "This is a very long sentence" "that being cut to avoid" "the potential crash" "happened in the runtime!"
 ```
 
-![Screen Shot 2022-04-29 at 10.20.11 PM](/Users/kounarushi/Desktop/paper/build_paper/Screen Shot 2022-04-29 at 10.20.11 PM.png)
+![Screen Shot 2022-04-29 at 10.20.11 PM](./Screen Shot 2022-04-29 at 10.20.11 PM.png)
 
 ### O3优化编译报错
 
-![Screen Shot 2022-04-27 at 8.25.04 PM](/Users/kounarushi/Desktop/paper/build_paper/Screen Shot 2022-04-27 at 8.25.04 PM.png)
+![Screen Shot 2022-04-27 at 8.25.04 PM](./Screen Shot 2022-04-27 at 8.25.04 PM.png)
 
 ### 缺少宽字符支持
 
 
 
-![Screen Shot 2022-04-29 at 10.16.17 PM](/Users/kounarushi/Desktop/paper/build_paper/Screen Shot 2022-04-29 at 10.16.17 PM.png)
+![Screen Shot 2022-04-29 at 10.16.17 PM](./Screen Shot 2022-04-29 at 10.16.17 PM.png)
 
 ### import 文件路径逻辑
 
