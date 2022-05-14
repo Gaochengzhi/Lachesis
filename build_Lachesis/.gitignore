@@ -2,7 +2,6 @@
 *.exe
 *.dSYM
 test
-build/*
 lac
 .vscode/*
 
