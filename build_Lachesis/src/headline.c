@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 30.04.2022
+ * Last Modified Date: 07.05.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "headline.h"
@@ -72,16 +72,18 @@ int check_commandline_argument(int* argc, char** argv, lenv* e)
                 _debug_mode = true;
                 save_runtime_info_to_log();
                 return_number = 1;
-                goto new;
+                break;
             }
-            if (strstr(argv[i], "-std")) {
-                LObject* args = lobj_add(lobj_sexpr(), lobj_string("stdlib"));
+            if (strstr(argv[i], "std")) {
+                LObject* args = lobj_add(lobj_sexpr(),
+                    lobj_string("/Users/kounarushi/Desktop/paper/"
+                                "build_Lachesis/stdlib"));
                 LObject* x = built_in_import(e, args);
                 if (x->type == LOBJ_ERR) {
                     lobj_print_line(x);
                 }
                 lobj_delete(x);
-                goto new;
+                break;
             }
             if (strstr(argv[i], "-h")) {
                 print_help();
@@ -92,8 +94,7 @@ int check_commandline_argument(int* argc, char** argv, lenv* e)
                     "usage: lac [-gstdhelp] [-h -help] [-g] [-std] [filename]");
                 exit(0);
             }
-            new : for (int arg_index = i; arg_index < len - 1; ++arg_index)
-            {
+            for (int arg_index = i; arg_index < len - 1; ++arg_index) {
                 argv[arg_index] = argv[arg_index + 1];
             }
         }
@@ -102,11 +103,11 @@ int check_commandline_argument(int* argc, char** argv, lenv* e)
 }
 void print_help()
 {
-    puts("------ commandline argument ------");
+    puts("\033[0;34m------ commandline argument ------\033[0m");
     puts("-std \t\t import standard libarary to imteractive prompt.");
     puts("-h \t\t print help info to the stdout.");
     puts("-g \t\t save runtime info to log.txt.");
-    puts("------ language syntax -----");
+    puts("\033[0;34m------ language syntax -----\033[0m");
     puts("|----------------------------------------- \t| "
          "--------------------------------------------------\t|");
     puts("|interface                                 \t| example              "

@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 07.03.2022
- * Last Modified Date: 30.04.2022
+ * Last Modified Date: 07.05.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -236,13 +236,13 @@ LObject* built_in_eval(lenv* e, LObject* obj)
 
 LObject* built_in_join(lenv* e, LObject* obj)
 {
-    for (int i = 0; i < obj->count; ++i) {
+    for (int i = 0; i < obj->count; ++i)
         ERROW_CHECK_TYPE("join", obj, i, LOBJ_QEXPR);
-    }
 
     LObject* x = lobj_pop(obj, 0);
     while (obj->count) {
-        x = lobj_join(x, lobj_pop(obj, 0));
+        LObject* tmp = lobj_pop(obj, 0);
+        x = lobj_join(x, tmp);
     }
     lobj_delete(obj);
     return x;
@@ -340,15 +340,14 @@ LObject* built_in_import(lenv* e, LObject* obj)
     mpc_result_t raw;
     /*int mpc_parse_contents(const char *filename, mpc_parser_t *p, mpc_result_t
      * *r) */
-    if (mpc_parse_contents(obj->sub_obj[0]->string, LExpression, &raw)) {
+    if (mpc_parse_contents(obj->sub_obj[0]->str, LExpression, &raw)) {
         LObject* expression = lobj_read(raw.output);
         mpc_ast_delete(raw.output);
 
         while (expression->count) {
             LObject* x = lobj_eval(e, lobj_pop(expression, 0));
-            if (x->type == LOBJ_ERR) {
+            if (x->type == LOBJ_ERR)
                 lobj_print_line(x);
-            }
         }
 
         lobj_delete(expression);
@@ -357,30 +356,27 @@ LObject* built_in_import(lenv* e, LObject* obj)
     } else {
         char* error_message = mpc_err_string(raw.error);
         mpc_err_delete(raw.error);
-        LObject* error
+        LObject* error_obj
             = lobj_error("Could not import the library %s", error_message);
         free(error_message);
         lobj_delete(obj);
-        return error;
+        return error_obj;
     }
 }
 LObject* built_in_print(lenv* e, LObject* obj)
 {
-    for (int i = 0; i < obj->count; ++i) {
+    for (int i = 0; i < obj->count; ++i)
         lobj_print(obj->sub_obj[i]);
-    }
-    putchar('\n');
     lobj_delete(obj);
     return lobj_sexpr();
 }
 LObject* built_in_fprint(lenv* e, LObject* obj)
 {
     ERROW_CHECK_TYPE("fprint", obj, 0, LOBJ_STR);
-    char* file_name = obj->sub_obj[0]->string;
+    char* file_name = obj->sub_obj[0]->str;
     FILE* ptr = fopen(file_name, "a");
-    for (int i = 1; i < obj->count; ++i) {
+    for (int i = 1; i < obj->count; ++i)
         lobj_fprint(ptr, obj->sub_obj[i]);
-    }
     lobj_delete(obj);
     fclose(ptr);
     return lobj_sexpr();
@@ -390,7 +386,33 @@ LObject* built_in_error(lenv* e, LObject* obj)
     ERROW_CHECK_NUM("error", obj, 1);
     ERROW_CHECK_TYPE("error", obj, 1, LOBJ_STR);
 
-    LObject* error = lobj_error(obj->sub_obj[0]->string);
+    LObject* error_obj = lobj_error(obj->sub_obj[0]->str);
     lobj_delete(obj);
-    return error;
+    return error_obj;
+}
+LObject* built_in_loop(lenv* e, LObject* obj)
+{
+    ERROW_CHECK_NUM("loop", obj, 2);
+    ERROW_CHECK_TYPE("loop", obj, 0, LOBJ_NUM);
+    ERROW_CHECK_TYPE("loop", obj, 1, LOBJ_QEXPR);
+    obj->sub_obj[1]->type = LOBJ_SEXPR;
+    int _count = (int)obj->sub_obj[0]->num;
+    LObject* res;
+    LObject* x;
+    LObject* y;
+    int i = 0;
+    LObject* l[_count];
+    while (_count > i) {
+        y = lobj_copy(obj);
+        res = lobj_pop(y, 1);
+        x = lobj_eval(e, res);
+        l[i] = x;
+        lobj_print_line(x);
+        x = NULL;
+        y = NULL;
+        res = NULL;
+        i++;
+    }
+    lobj_delete(obj);
+    return l[1];
 }

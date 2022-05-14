@@ -3,26 +3,24 @@
 	#we can use a special tag ".PHONY" to explicitly indicate that a 
 	#target is a "pseudo target", indicating to make that whether 
 	#there is this file or not, this target is a "pseudo target". Target".
-.PHONY: all clean install run
+.PHONY: all clean install run debug test
 FLAGS := -Wall 
 cc = clang
-target = Lachesis
+target =i lac
 SRCDIR := src
 TESTDIR := test
 deps = $(shell find  ./src -name "*.h")
 src = $(shell find  ./lib -name "*.c"&& find ./src -name "*.c")
+testfile = $(shell find  ./test -name "*.lac")
 obj = $(src:%.c=%.o)
-
 
 debug:
 	#-g means gdb
-	$(cc) -Wall -g  -lreadline  $(src) 
-	mv a.out lac
+	$(cc) -Wall -g  -lreadline  $(src) -o lac 
 install:
-	$(cc) -Wall  -lreadline  $(src) 
-	mv a.out build/lac
-run: 
-	./lac
+	$(cc) -Wall -O3 -lreadline  $(src) -o ./build/lac
+test: 
+	./lac $(testfile)
 clean:
-	-@rm -f Lachesis
-	-@rm -f src/*.o test/*.o
+	-@rm -f lac
+	-@rm -f build/lac

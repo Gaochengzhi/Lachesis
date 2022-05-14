@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 26.02.2022
- * Last Modified Date: 01.04.2022
+ * Last Modified Date: 30.04.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-lenv *lenv_new(void)
+lenv* lenv_new(void)
 {
-    lenv *e = malloc(sizeof(lenv));
+    lenv* e = malloc(sizeof(lenv));
     e->parent = NULL;
     e->count = 0;
     e->symbol_list = NULL;
@@ -24,10 +24,9 @@ lenv *lenv_new(void)
     return e;
 }
 
-void lenv_del(lenv *e)
+void lenv_delete(lenv* e)
 {
-    for (int i = 0; i < e->count; ++i)
-    {
+    for (int i = 0; i < e->count; ++i) {
         free(e->symbol_list[i]);
         lobj_delete(e->functor_list[i]);
     }
@@ -37,86 +36,71 @@ void lenv_del(lenv *e)
     free(e);
 }
 
-lenv *lenv_copy(lenv *e)
+lenv* lenv_copy(lenv* e)
 {
-    lenv *new = malloc(sizeof(lenv));
-    new->parent = e->parent;
-    new->count = e->count;
-    new->symbol_list = malloc(sizeof(char *) * e->count);
-    new->functor_list = malloc(sizeof(LObject *) * e->count);
-    for (int i = 0; i < new->count; ++i)
-    {
-        new->symbol_list[i] = malloc(strlen(e->symbol_list[i]) + 1);
-        strcpy(new->symbol_list[i], e->symbol_list[i]);
-        new->functor_list[i] = lobj_copy(e->functor_list[i]);
+    lenv* new_env = malloc(sizeof(lenv));
+    new_env->parent = e->parent;
+    new_env->count = e->count;
+    new_env->symbol_list = malloc(sizeof(char*) * new_env->count);
+    new_env->functor_list = malloc(sizeof(LObject*) * new_env->count);
+    for (int i = 0; i < new_env->count; ++i) {
+        new_env->symbol_list[i] = malloc(strlen(e->symbol_list[i]) + 1);
+        strcpy(new_env->symbol_list[i], e->symbol_list[i]);
+        new_env->functor_list[i] = lobj_copy(e->functor_list[i]);
     }
-    return new;
+    return new_env;
 }
 
 /*get an copy of the LObject in lenv*/
-LObject *lenv_get_copied_obj_from_env(lenv *mother_env, LObject *son_obj)
+LObject* lenv_get_copied_obj_from_env(lenv* mother_env, LObject* son_obj)
 {
 
     for (int i = 0; i < mother_env->count; ++i)
-    {
         if (strcmp(mother_env->symbol_list[i], son_obj->symbol) == 0)
-        {
             return lobj_copy(mother_env->functor_list[i]);
-        }
-    }
 
-    if (mother_env->parent)
-    {
-        return lenv_get_copied_obj_from_env(mother_env->parent, son_obj);
-    }
-    else
-    {
-        return lobj_error("Undefined symbol!");
-    }
+    return (mother_env->parent)
+        ? lenv_get_copied_obj_from_env(mother_env->parent, son_obj)
+        : lobj_error("Undefined symbol:%s", son_obj->symbol);
 }
 
-void lenv_put_symbol(lenv *e, LObject *symbol_obj, LObject *functor)
+void lenv_put_symbol(lenv* e, LObject* symbol_obj, LObject* functor)
 {
     /*iterate e, if function's symbol already in e, delete the old one */
     /*and replace with the new one;*/
     for (int i = 0; i < e->count; ++i)
-    {
-        if (strcmp(e->symbol_list[i], symbol_obj->symbol) == 0)
-        {
+        if (strcmp(e->symbol_list[i], symbol_obj->symbol) == 0) {
             lobj_delete(e->functor_list[i]);
             e->functor_list[i] = lobj_copy(functor);
             return;
         }
-    }
 
     /*if not repeated found, allocate for new obj */
     e->count++;
-    e->functor_list = realloc(e->functor_list, sizeof(LObject *) * e->count);
-    e->symbol_list = realloc(e->symbol_list, sizeof(char *) * e->count);
+    e->functor_list = realloc(e->functor_list, sizeof(LObject*) * e->count);
+    e->symbol_list = realloc(e->symbol_list, sizeof(char*) * e->count);
     e->functor_list[e->count - 1] = lobj_copy(functor);
     e->symbol_list[e->count - 1] = malloc(strlen(symbol_obj->symbol) + 1);
     strcpy(e->symbol_list[e->count - 1], symbol_obj->symbol);
 }
 
-void lenv_add_builtin_func(lenv *e, char *symbol_name, lbuiltin func)
+void lenv_add_builtin_func(lenv* e, char* symbol_name, builtin_func_type func)
 {
-    LObject *symbol_obj = lobj_symbol(symbol_name);
-    LObject *functor = lobj_func(func);
+    LObject* symbol_obj = lobj_symbol(symbol_name);
+    LObject* functor = lobj_func(func);
     lenv_put_symbol(e, symbol_obj, functor);
     lobj_delete(symbol_obj);
     lobj_delete(functor);
 }
 
-void lenv_define(lenv *e, LObject *symbol_obj, LObject *functor)
+void lenv_define(lenv* e, LObject* symbol_obj, LObject* functor)
 {
     /*find e->parent's parent... */
     while (e->parent)
-    {
         e = e->parent;
-    }
     lenv_put_symbol(e, symbol_obj, functor);
 }
-void lenv_builtin_init_list(lenv *e)
+void lenv_builtin_init_list(lenv* e)
 {
     /*__BASIC_TYPES__*/
     lenv_add_builtin_func(e, "list", built_in_list);
@@ -124,6 +108,7 @@ void lenv_builtin_init_list(lenv *e)
     lenv_add_builtin_func(e, "tail", built_in_tail);
     lenv_add_builtin_func(e, "eval", built_in_eval);
     lenv_add_builtin_func(e, "join", built_in_join);
+    lenv_add_builtin_func(e, "loop", built_in_loop);
 
     lenv_add_builtin_func(e, "+", built_in_add);
     lenv_add_builtin_func(e, "-", built_in_sub);

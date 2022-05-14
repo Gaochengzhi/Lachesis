@@ -1,3 +1,11 @@
+/**
+ * File              : lachesis_type.h
+ * License           : The MIT License (MIT)
+ * Author            : Gao Chengzhi <2673730435@qq.com>
+ * Date              : 06.05.2022
+ * Last Modified Date: 06.05.2022
+ * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
+ */
 #ifndef _LACHESIS_TYPE_H
 #define _LACHESIS_TYPE_H
 
@@ -10,7 +18,7 @@ typedef struct _lobj LObject;
 struct _lenv;
 typedef struct _lenv lenv;
 
-typedef LObject* (*lbuiltin)(lenv*, LObject*);
+typedef LObject* (*builtin_func_type)(lenv*, LObject*);
 
 enum ltype {
     LOBJ_NUM,
@@ -30,14 +38,14 @@ struct _lobj {
     double double_num;
     char* err;
     char* symbol;
-    char* string;
+    char* str;
 
     // sub_object
     int count;         // how many pointers to a list of lobj
     LObject** sub_obj; // pointers to a list of lobj
 
     // function
-    lbuiltin builtin_func;
+    builtin_func_type builtin_func;
 
     // environmnet
     lenv* env;

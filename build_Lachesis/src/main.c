@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     /*Language Definition*/
     mpca_lang(MPCA_LANG_DEFAULT, "                               \
         number    : /-?[0-9]+/;                             \
-        double    : /`-?[0-9]*\\.?[0-9]+`/;                    \
+        double    :  /`-?[0-9]*\\.?[0-9]+`/      ;                    \
         symbol    : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/;            \
         string    : /\"(\\\\.|[^\"])*\"/;                        \
         comment   : /;[^\\r\\n]*/;                               \
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 
         while (1) {
 
-            char* input = readline("Lachesis > ");
+            char* input = readline("\033[;32mλ ->\033[0m ");
             /*Attention! readline needs -lreadline argument!*/
             if (strcmp(input, "q") == 0) {
                 puts("Bye!");
@@ -97,7 +97,6 @@ int main(int argc, char** argv)
                 mpc_ast_delete(raw.output);
                 if (print_tree)
                     fflush(stderr);
-
             } else {
                 mpc_err_print(raw.error);
                 mpc_err_delete(raw.error);
@@ -119,7 +118,7 @@ int main(int argc, char** argv)
         }
     }
     /*before end of code*/
-    lenv_del(e);
+    lenv_delete(e);
     mpc_cleanup(9, Number, Double, Symbol, String, Comment, Sexpr, Qexpr, Expr,
         LExpression);
 

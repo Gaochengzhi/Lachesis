@@ -2,5 +2,7 @@
 *.exe
 *.dSYM
 test
-library/*
 build/*
+lac
+.vscode/*
+

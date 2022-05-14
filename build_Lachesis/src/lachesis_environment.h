@@ -17,9 +17,9 @@
 
 lenv *lenv_new(void);
 lenv *lenv_copy(lenv *e);
-void lenv_del(lenv *e);
+void lenv_delete(lenv *e);
 void lenv_put_symbol(lenv *e, LObject *func_smybol_obj, LObject *func_ptr);
-void lenv_add_builtin_func(lenv *e, char *symbol_name, lbuiltin func);
+void lenv_add_builtin_func(lenv *e, char *symbol_name, builtin_func_type func);
 void lenv_builtin_init_list(lenv *e);
 void lenv_define(lenv *e, LObject *o, LObject *func);
 LObject *lenv_get_copied_obj_from_env(lenv *mother_env, LObject *son_obj);
