@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 27.04.2022
+ * Last Modified Date: 16.05.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 
@@ -23,5 +23,5 @@
 void lec_print_headline();
 void print_help();
 void save_runtime_info_to_log();
-int check_commandline_argument(int *argc, char **argv, lenv *e);
+int check_commandline_argument(int* argc, char** argv, lenv* e);
 #endif

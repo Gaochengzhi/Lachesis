@@ -3,7 +3,7 @@
  * License           : The MIT License (MIT)
  * Author            : Gao Chengzhi <2673730435@qq.com>
  * Date              : 16.02.2022
- * Last Modified Date: 07.05.2022
+ * Last Modified Date: 16.05.2022
  * Last Modified By  : Gao Chengzhi <2673730435@qq.com>
  */
 #include "headline.h"
@@ -75,9 +75,10 @@ int check_commandline_argument(int* argc, char** argv, lenv* e)
                 break;
             }
             if (strstr(argv[i], "std")) {
-                LObject* args = lobj_add(lobj_sexpr(),
-                    lobj_string("/Users/kounarushi/Desktop/paper/"
-                                "build_Lachesis/stdlib"));
+                char cwd[512];
+                getcwd(cwd, sizeof(cwd));
+                strcat(cwd, "/stdlib");
+                LObject* args = lobj_add(lobj_sexpr(), lobj_string(cwd));
                 LObject* x = built_in_import(e, args);
                 if (x->type == LOBJ_ERR) {
                     lobj_print_line(x);
