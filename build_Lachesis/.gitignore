@@ -1,7 +1,6 @@
 *~
 *.exe
 *.dSYM
-test
 lac
 .vscode/*
 
