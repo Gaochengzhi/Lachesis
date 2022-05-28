@@ -1,0 +1,255 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width initial-scale=1'>
+    <title>doc</title>
+    <link href="../bootstrap-5.2.0-beta1-dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+
+<body>
+    <div class="container">
+        <h1 id='documentation'>Documentation</h1>
+        <p>Guides, tutorials, and reference material to help you learn more about Lachesis</p>
+        <hr />
+        <h2 id='installing-lac'>Installing Lac</h2>
+        <div class="border rounded p-2 shadow">
+
+            <h3 id='requirement'>requirement</h3>
+            <pre><code>git
+make
+clang or gcc
+libreadine-dev
+</code></pre>
+            <h3 id='build'>build</h3>
+            <pre><code>git clone https://github.com/Gaochengzhi/Lachesis
+cd build_Lachesis
+make install debug test
+</code></pre>
+            <h3 id='set-path'>set path</h3>
+            <pre><code>PATH=&quot;YOUR_PATH_TO_THIS_PROJECT/build_Lachesis/build:$PATH&quot;
+</code></pre>
+
+        </div>
+
+
+        <hr />
+        <h2 id='language-syntax'>Language Syntax</h2>
+
+        <div class="border rounded p-2 shadow">
+            <h3 id='s-expressions'>S-expressions</h3>
+            <pre><code>(_input) &gt;&gt; + 1 1 1 1 1 1
+(output) &gt;&gt; 6
+</code></pre>
+            <p>Here + is no longer seen as a binary operator, but as a symbol for an addition function, which is the
+                name of
+                the
+                function. Such a design disappears the advantage of Polish notation itself without parentheses when
+                multiple
+                operator expressions are involved. For example, the following expressions will be ambiguous without
+                parentheses:
+            </p>
+            <pre><code>(_input) &gt;&gt; * + 1 1 3 2
+(output) &gt;&gt; error!
+(output) &gt;&gt; could be 10 ( [ * [+ 1 1 3] 2 ] ) or 12 ( [ * [ + 1 1 ] 3 2] )
+</code></pre>
+            <p>So the evaluation statement of Lachesis is designed as a symbolic expression (English:
+                SymbolicExpression,
+                S-expression) using square brackets as delimiters.</p>
+            <pre><code>(_input) &gt;&gt; [* + [1 1 3] 2]
+(output) &gt;&gt; 10
+</code></pre>
+
+
+
+            <h3 id='q-expression'>Q-expression</h2>
+
+                <p>S-expressions are evaluated as soon as they are read, which leads to a number of limitations. For
+                    example, if
+                    the
+                    expression contains unknown variables, solving directly will throw an error:</p>
+                <pre><code>(_input) &gt;&gt; + x 1
+(output) &gt;&gt; error! x is undefined!
+</code></pre>
+                <p>The unknown variable may be defined later. In this case, it is natural to want to delay the
+                    derivation of the
+                    expression and only keep its form (lazy evaluation). In this case, it is necessary to introduce a
+                    quoted
+                    expression (English: Quoted-Expression). , also translated as Q-expression) concept.</p>
+                <p>The only formal difference between Q-expressions and S-expressions is that they use a pair of curly
+                    braces as
+                    delimiters:</p>
+                <pre><code>(_input) &gt;&gt; {+x1}
+(output) &gt;&gt; {+x1}
+</code></pre>
+                <p>The lazy evaluation feature of Q-expressions is widely used to pass information between programs,
+                    because it
+                    is
+                    not immediately deduced like S-expressions, resulting in the loss of information within the
+                    expression.</p>
+                <h3 id='variable'>Variable</h2>
+                    <p>Variable is a very misleading name because variables in functional languages are actually
+                        immutable and
+                        cannot be
+                        changed once initialized. Repeating the definition of the symbol again will reallocate the
+                        memory.
+                        The concept of variables in Lachesis is more like a symbolic binding. Lachesis passes the name
+                        of the
+                        variable
+                        through a Q-expression:</p>
+                    <pre><code>(_input) &gt;&gt; def {_var_name} 1
+(_input) &gt;&gt; _var_name
+(output) &gt;&gt; 1
+</code></pre>
+                    <p>Lachesis&#39; def function can initialize multiple variables at once like golang or Python:</p>
+                    <pre><code>(_input) &gt;&gt; def {x y z} 1 2 3
+(_input) &gt;&gt; print x y z
+(output) &gt;&gt; 1 2 3
+</code></pre>
+                    <p>In functional languages, S-expressions can also be variables, but S-expressions are passed in the
+                        form of
+                        Q-expressions, and the eval function is used to convert Q-expressions into S-expressions when
+                        deduction is
+                        required.</p>
+                    <pre><code>(_input) &gt;&gt; def {_add_one} {+ x 1}
+(_input) &gt;&gt; def {x} 1
+(_input) &gt;&gt; eval _add_one
+(output) &gt;&gt; 5
+</code></pre>
+                    <h3 id='lambda-functions'>lambda functions</h2>
+                        <p>Lambda function is a common core concept of functional languages. It refers to a type of
+                            function that does
+                            not
+                            need to define an identifier (function name). In Lachesis, it is a function used to define
+                            functions.
+                            Binding a variable name to an expression does not express the concept of a function very
+                            well. An obvious
+                            disadvantage is that the variable name is exposed to the outside world. The lambda function
+                            solves this
+                            problem.
+                        </p>
+                        <pre><code>(_input) &gt;&gt; def {add_two} [\{x y}{+x y}]
+(_input) &gt;&gt; [ add_two 1 2 ]
+(output) &gt;&gt; 3
+</code></pre>
+                        <p>A Lambda function is formally an S-expression with &quot;&quot; as the function name, one
+                            Q-expression as the
+                            parameter list, and another Q-expression as the function body. Each lambda function is its
+                            own domain, and
+                            its
+                            internal variables are invisible to the outside world.
+                            The number of parameters of the Lambda function is variable, with &amp; as the identifier,
+                            followed by a
+                            symbol,
+                            any actual parameters will be attached to this symbol in the form of Q-expression.
+                            E.g:</p>
+                        <pre><code>(_input) &gt;&gt; def {&amp;exp}[\{_operator &amp; _list} {eval [join {_operator } _list]}]
+(_input) &gt;&gt; &amp;exp + 1 2 3
+(output) &gt;&gt; 6
+</code></pre>
+                        <p>The number of parameters of the Lambda function can also be less than the specified number,
+                            that is, the
+                            original
+                            function can be converted into a partial function. E.g:</p>
+                        <pre><code>(_input) &gt;&gt; def {partial_func} [\{x y z} {+ x y z}]
+(_input) &gt;&gt; def {exp} [partial_func 1 2]
+
+(_input)&gt;&gt;exp
+(output) &gt;&gt; [\{z}{+x y z}]
+
+(_input) &gt;&gt; exp 2
+(output) &gt;&gt; 5
+</code></pre>
+                        <p>Definitions of Lachesis utility functions</p>
+                        <p>The above are the core syntax concepts of Lachesis. Lachesis also defines some preset utility
+                            functions,
+                            which
+                            are listed as follows:</p>
+                        <figure>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Interface</th>
+                                        <th>Description</th>
+                                        <th>Example</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>[+-<em>/==!=&gt;&lt;≥≤] <sexpr></em></td>
+                                        <td>common numeric operators and comparators</td>
+                                        <td>* 1 5 =&gt; 5</td>
+                                    </tr>
+                                    <tr>
+                                        <td>head <qexpr> =&gt;<qexpr>
+                                        </td>
+                                        <td>returns the first element of the expression</td>
+                                        <td>head {1 2 3} =&gt; {1}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>tail <qexpr> =&gt;<qexpr>
+                                        </td>
+                                        <td>returns the expression except the first element</td>
+                                        <td>tail {1 2 3} =&gt; {2 3}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>list <sexpr> =&gt;<qexpr>
+                                        </td>
+                                        <td>converts S-expressions to Q-expressions</td>
+                                        <td>list [+ 1 2] =&gt; {+ 1 2}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>join <qexpr> =&gt;<qexpr>
+                                        </td>
+                                        <td>joins multiple Q-expressions</td>
+                                        <td>join {+} {1 2} =&gt; {+ 1 2}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>if <bool>
+                                                <qexpr>
+                                                    <qexpr> =&gt;<sexpr>
+                                        </td>
+                                        <td>branch judgment</td>
+                                        <td>if [== x y] {+ x y} {- x y}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>print <string>* =&gt;<string>
+                                        </td>
+                                        <td>print multiple strings</td>
+                                        <td>print &quot;hello world&quot; =&gt; hello world</td>
+                                    </tr>
+                                    <tr>
+                                        <td>fprint &lt;file_name&gt;<string>* =&gt;<string>
+                                        </td>
+                                        <td>print multiple strings to file</td>
+                                        <td>fprint &quot;new.txt&quot; &quot;hello world&quot; =&gt; new:hello world
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>import <string>*</td>
+                                        <td>import other lachesis files</td>
+                                        <td>import &quot;stdlib&quot;</td>
+                                    </tr>
+                                    <tr>
+                                        <td>loop <num>
+                                                <qexpr>
+                                        </td>
+                                        <td>Execute the command num times</td>
+                                        <td>Loop 2 {print 1} =&gt; 1 1</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </figure>
+        </div>
+        <hr />
+        <h2>Learn more</h2>
+        <a href="https://github.com/Gaochengzhi/Lachesis">Github/Lachesis</a>
+
+        <p class="my-3">© 2021－2022 gaochengzhi.me, all rights reserved </p>
+    </div>
+</body>
+
+
+</html>
